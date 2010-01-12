@@ -60,10 +60,17 @@ int main( int, char** )
 	baseLogger.error() << "Error output";
 	baseLogger.fatal() << "Fatal output";
 
+#ifdef NDEBUG
+	if( baseLogger.beTrace() )
+		return 1;
+	if( baseLogger.beDebug() )
+		return 1;
+#else
 	if( ! baseLogger.beTrace() )
 		return 1;
 	if( ! baseLogger.beDebug() )
 		return 1;
+#endif
 	if( ! baseLogger.beInfo() )
 		return 1;
 	if( ! baseLogger.beWarn() )
