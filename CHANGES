@@ -1,3 +1,5 @@
-2010-01-12:
- * Nothing done yet
+2010-01-12 - Version 0.1:
+ * Basic Logging
+ * Supression of low relevance messages
+ * Automatic addition of severity and timestamp
 
