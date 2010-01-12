@@ -34,7 +34,7 @@ namespace einhard
 	 * A utility class that does not print anywhere.
 	 * This allows to not print stuff.
 	 */
-	class OutputFormatter
+	template<LogLevel VERBOSITY> class OutputFormatter
 	{
 		private:
 			std::ostream * const out;
@@ -42,7 +42,7 @@ namespace einhard
 		public:
 			OutputFormatter( std::ostream * const out ) : out( out ) { };
 
-			template<typename T> inline const OutputFormatter& operator<<( T arg ) const
+			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( T msg ) const
 			{
 				if( out != 0 )
 				{
@@ -56,11 +56,14 @@ namespace einhard
 					*out << '[';
 					*out << timeinfo->tm_hour << ':' << timeinfo->tm_min << ':' << timeinfo->tm_sec;
 					*out << ']';
+					// TODO would be good to have this at least .01 seconds
+					// for non-console output pure timestamp would probably be better
 
-					// TODO output the log level of the message
+					// output the log level of the message
+					*out << ' ' << getLogLevelString( VERBOSITY ) << ": ";
 
 					// output the log message
-					*out << arg;
+					*out << msg;
 				}
 
 				return *this;
@@ -81,12 +84,12 @@ namespace einhard
 		public:
 			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity ) { };
 
-			inline const OutputFormatter trace() const;
-			inline const OutputFormatter debug() const;
-			inline const OutputFormatter info() const;
-			inline const OutputFormatter warn() const;
-			inline const OutputFormatter error() const;
-			inline const OutputFormatter fatal() const;
+			inline const OutputFormatter<TRACE> trace() const;
+			inline const OutputFormatter<DEBUG> debug() const;
+			inline const OutputFormatter<INFO> info() const;
+			inline const OutputFormatter<WARN> warn() const;
+			inline const OutputFormatter<ERROR> error() const;
+			inline const OutputFormatter<FATAL> fatal() const;
 
 			inline bool beTrace() const;
 			inline bool beDebug() const;
@@ -138,12 +141,12 @@ namespace einhard
 		}
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::trace() const
+	template<LogLevel MAX> const OutputFormatter<TRACE> Logger<MAX>::trace() const
 	{
 		if( beTrace() )
-			return OutputFormatter( &std::cout );
+			return OutputFormatter<TRACE>( &std::cout );
 		else
-			return OutputFormatter( 0 );
+			return OutputFormatter<TRACE>( 0 );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beTrace() const
@@ -151,12 +154,12 @@ namespace einhard
 		return ( MAX <= TRACE && verbosity <= TRACE );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::debug() const
+	template<LogLevel MAX> const OutputFormatter<DEBUG> Logger<MAX>::debug() const
 	{
 		if( beDebug() )
-			return OutputFormatter( &std::cout );
+			return OutputFormatter<DEBUG>( &std::cout );
 		else
-			return OutputFormatter( 0 );
+			return OutputFormatter<DEBUG>( 0 );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beDebug() const
@@ -164,12 +167,12 @@ namespace einhard
 		return ( MAX <= DEBUG && verbosity <= DEBUG );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::info() const
+	template<LogLevel MAX> const OutputFormatter<INFO> Logger<MAX>::info() const
 	{
 		if( beInfo() )
-			return OutputFormatter( &std::cout );
+			return OutputFormatter<INFO>( &std::cout );
 		else
-			return OutputFormatter( 0 );
+			return OutputFormatter<INFO>( 0 );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beInfo() const
@@ -177,12 +180,12 @@ namespace einhard
 		return ( MAX <= INFO && verbosity <= INFO );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::warn() const
+	template<LogLevel MAX> const OutputFormatter<WARN> Logger<MAX>::warn() const
 	{
 		if( beWarn() )
-			return OutputFormatter( &std::cout );
+			return OutputFormatter<WARN>( &std::cout );
 		else
-			return OutputFormatter( 0 );
+			return OutputFormatter<WARN>( 0 );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beWarn() const
@@ -190,12 +193,12 @@ namespace einhard
 		return ( MAX <= WARN && verbosity <= WARN );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::error() const
+	template<LogLevel MAX> const OutputFormatter<ERROR> Logger<MAX>::error() const
 	{
 		if( beError() )
-			return OutputFormatter( &std::cout );
+			return OutputFormatter<ERROR>( &std::cout );
 		else
-			return OutputFormatter( 0 );
+			return OutputFormatter<ERROR>( 0 );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beError() const
@@ -203,12 +206,12 @@ namespace einhard
 		return ( MAX <= ERROR && verbosity <= ERROR );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::fatal() const
+	template<LogLevel MAX> const OutputFormatter<FATAL> Logger<MAX>::fatal() const
 	{
 		if( beFatal() )
-			return OutputFormatter( &std::cout );
+			return OutputFormatter<FATAL>( &std::cout );
 		else
-			return OutputFormatter( 0 );
+			return OutputFormatter<FATAL>( 0 );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beFatal() const
