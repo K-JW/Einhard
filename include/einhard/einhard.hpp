@@ -63,29 +63,29 @@ namespace einhard
 		public:
 			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity ) { };
 
-			const OutputFormatter trace();
-			const OutputFormatter debug();
-			const OutputFormatter info();
-			const OutputFormatter warn();
-			const OutputFormatter error();
-			const OutputFormatter fatal();
+			inline const OutputFormatter trace() const;
+			inline const OutputFormatter debug() const;
+			inline const OutputFormatter info() const;
+			inline const OutputFormatter warn() const;
+			inline const OutputFormatter error() const;
+			inline const OutputFormatter fatal() const;
 
-			bool beTrace();
-			bool beDebug();
-			bool beInfo();
-			bool beWarn();
-			bool beError();
-			bool beFatal();
+			inline bool beTrace() const;
+			inline bool beDebug() const;
+			inline bool beInfo() const;
+			inline bool beWarn() const;
+			inline bool beError() const;
+			inline bool beFatal() const;
 
-			void setVerbosity( LogLevel verbosity )
+			inline void setVerbosity( LogLevel verbosity )
 			{
 				this->verbosity = verbosity;
 			}
-			LogLevel getVerbosity( ) const
+			inline LogLevel getVerbosity( ) const
 			{
 				return this->verbosity;
 			}
-			char const * getVerbosityString( ) const
+			inline char const * getVerbosityString( ) const
 			{
 				switch( this->verbosity )
 				{
@@ -115,7 +115,7 @@ namespace einhard
 	 * IMPLEMENTATIONS
 	 */
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::trace()
+	template<LogLevel MAX> const OutputFormatter Logger<MAX>::trace() const
 	{
 		if( beTrace() )
 			return OutputFormatter( &std::cout );
@@ -123,12 +123,12 @@ namespace einhard
 			return OutputFormatter( 0 );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beTrace()
+	template<LogLevel MAX> bool Logger<MAX>::beTrace() const
 	{
 		return ( MAX <= TRACE && verbosity <= TRACE );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::debug()
+	template<LogLevel MAX> const OutputFormatter Logger<MAX>::debug() const
 	{
 		if( beDebug() )
 			return OutputFormatter( &std::cout );
@@ -136,12 +136,12 @@ namespace einhard
 			return OutputFormatter( 0 );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beDebug()
+	template<LogLevel MAX> bool Logger<MAX>::beDebug() const
 	{
 		return ( MAX <= DEBUG && verbosity <= DEBUG );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::info()
+	template<LogLevel MAX> const OutputFormatter Logger<MAX>::info() const
 	{
 		if( beInfo() )
 			return OutputFormatter( &std::cout );
@@ -149,12 +149,12 @@ namespace einhard
 			return OutputFormatter( 0 );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beInfo()
+	template<LogLevel MAX> bool Logger<MAX>::beInfo() const
 	{
 		return ( MAX <= INFO && verbosity <= INFO );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::warn()
+	template<LogLevel MAX> const OutputFormatter Logger<MAX>::warn() const
 	{
 		if( beWarn() )
 			return OutputFormatter( &std::cout );
@@ -162,12 +162,12 @@ namespace einhard
 			return OutputFormatter( 0 );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beWarn()
+	template<LogLevel MAX> bool Logger<MAX>::beWarn() const
 	{
 		return ( MAX <= WARN && verbosity <= WARN );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::error()
+	template<LogLevel MAX> const OutputFormatter Logger<MAX>::error() const
 	{
 		if( beError() )
 			return OutputFormatter( &std::cout );
@@ -175,12 +175,12 @@ namespace einhard
 			return OutputFormatter( 0 );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beError()
+	template<LogLevel MAX> bool Logger<MAX>::beError() const
 	{
 		return ( MAX <= ERROR && verbosity <= ERROR );
 	}
 
-	template<LogLevel MAX> const OutputFormatter Logger<MAX>::fatal()
+	template<LogLevel MAX> const OutputFormatter Logger<MAX>::fatal() const
 	{
 		if( beFatal() )
 			return OutputFormatter( &std::cout );
@@ -188,7 +188,7 @@ namespace einhard
 			return OutputFormatter( 0 );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beFatal()
+	template<LogLevel MAX> bool Logger<MAX>::beFatal() const
 	{
 		return ( MAX <= FATAL && verbosity <= FATAL );
 	}
