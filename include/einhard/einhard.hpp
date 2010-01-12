@@ -28,6 +28,8 @@ namespace einhard
 
 	enum LogLevel{ ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 
+	inline char* getLogLevelString( const LogLevel level );
+
 	/**
 	 * A utility class that does not print anywhere.
 	 * This allows to not print stuff.
@@ -43,7 +45,23 @@ namespace einhard
 			template<typename T> inline const OutputFormatter& operator<<( T arg ) const
 			{
 				if( out != 0 )
+				{
+					// Figure out current time
+					time_t rawtime;
+					tm * timeinfo;
+					time( &rawtime );
+					timeinfo = localtime( &rawtime );
+
+					// output it
+					*out << '[';
+					*out << timeinfo->tm_hour << ':' << timeinfo->tm_min << ':' << timeinfo->tm_sec;
+					*out << ']';
+
+					// TODO output the log level of the message
+
+					// output the log message
 					*out << arg;
+				}
 
 				return *this;
 			}
@@ -87,33 +105,38 @@ namespace einhard
 			}
 			inline char const * getVerbosityString( ) const
 			{
-				switch( this->verbosity )
-				{
-					case ALL:
-						return "all";
-					case TRACE:
-						return "trace";
-					case DEBUG:
-						return "debug";
-					case INFO:
-						return "info";
-					case WARN:
-						return "warn";
-					case ERROR:
-						return "error";
-					case FATAL:
-						return "fatal";
-					case OFF:
-						return "off";
-					default:
-						return "--- Something is horribly broken - A value outside the enumation has been given ---";
-				}
+				return getLogLevelString( this->verbosity );
 			}
 	};
 
 	/*
 	 * IMPLEMENTATIONS
 	 */
+
+	inline char* getLogLevelString( const LogLevel level )
+	{
+		switch( level )
+		{
+			case ALL:
+				return "ALL";
+			case TRACE:
+				return "TRACE";
+			case DEBUG:
+				return "DEBUG";
+			case INFO:
+				return "INFO";
+			case WARN:
+				return "WARNING";
+			case ERROR:
+				return "ERROR";
+			case FATAL:
+				return "FATAL";
+			case OFF:
+				return "OFF";
+			default:
+				return "--- Something is horribly broken - A value outside the enumation has been given ---";
+		}
+	}
 
 	template<LogLevel MAX> const OutputFormatter Logger<MAX>::trace() const
 	{
