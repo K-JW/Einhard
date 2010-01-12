@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.6.2)
 project(Einhard)
 
+# We have an include directory
+include_directories(include)
+
 # Install the header files
 install(DIRECTORY include/einhard DESTINATION include)
 
