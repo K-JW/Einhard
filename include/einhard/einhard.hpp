@@ -20,6 +20,7 @@
  */
 
 #include <iostream>
+#include <iomanip>
 #include <ctime>
 
 namespace einhard
@@ -52,8 +53,11 @@ namespace einhard
 
 					// output it
 					*out << '[';
-					// FIXME does not properly use 00:00:00 format but will print stuff like 1:1:1
-					*out << timeinfo->tm_hour << ':' << timeinfo->tm_min << ':' << timeinfo->tm_sec;
+					*out << std::setfill('0') << std::setw(2) << timeinfo->tm_hour;
+					*out << ':';
+					*out << std::setfill('0') << std::setw(2) << timeinfo->tm_min;
+					*out << ':';
+					*out << std::setfill('0') << std::setw(2) << timeinfo->tm_sec;
 					*out << ']';
 					// TODO would be good to have this at least .01 seconds
 					// for non-console output pure timestamp would probably be better
