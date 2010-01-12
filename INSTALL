@@ -1,0 +1,12 @@
+Einhard uses cmake for easy building and installation.
+
+Installation follows the usual cmake install path. From the top directory of einhard run:
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+
+This will install the headers in /usr/local/include. For customization you can use the usual
+cmake tools like ccmake or cmake-gui.
+
