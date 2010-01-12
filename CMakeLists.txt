@@ -5,9 +5,9 @@ project(Einhard)
 install(DIRECTORY include/einhard DESTINATION include)
 
 # Take care of Test
-#include (CTest)
-#
-#if(BUILD_TESTING)
-#	add_subdirectory(tests)
-#endif(BUILD_TESTING)
+include (CTest)
+
+if(BUILD_TESTING)
+	add_subdirectory(tests)
+endif(BUILD_TESTING)
 
