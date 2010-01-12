@@ -158,7 +158,11 @@ namespace einhard
 
 	template<LogLevel MAX> bool Logger<MAX>::beTrace() const
 	{
+#ifdef NDEBUG
+		return false;
+#else
 		return ( MAX <= TRACE && verbosity <= TRACE );
+#endif
 	}
 
 	template<LogLevel MAX> const OutputFormatter<DEBUG> Logger<MAX>::debug() const
@@ -171,7 +175,11 @@ namespace einhard
 
 	template<LogLevel MAX> bool Logger<MAX>::beDebug() const
 	{
+#ifdef NDEBUG
+		return false;
+#else
 		return ( MAX <= DEBUG && verbosity <= DEBUG );
+#endif
 	}
 
 	template<LogLevel MAX> const OutputFormatter<INFO> Logger<MAX>::info() const
