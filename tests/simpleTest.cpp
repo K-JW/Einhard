@@ -23,7 +23,7 @@
 
 using namespace einhard;
 
-int main( int argc, char* argv[] )
+int main( int, char** )
 {
 	Logger<> baseLogger;
 

@@ -20,6 +20,7 @@
  */
 
 #include <iostream>
+#include <ctime>
 
 namespace einhard
 {
@@ -80,11 +81,11 @@ namespace einhard
 			{
 				this->verbosity = verbosity;
 			}
-			LogLevel getVerbosity( )
+			LogLevel getVerbosity( ) const
 			{
 				return this->verbosity;
 			}
-			char const * const getVerbosityString( )
+			char const * getVerbosityString( ) const
 			{
 				switch( this->verbosity )
 				{
@@ -192,5 +193,5 @@ namespace einhard
 		return ( MAX <= FATAL && verbosity <= FATAL );
 	}
 
-};
+}
 

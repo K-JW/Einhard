@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 2.6.2)
 project(Einhard)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+# TODO would be nice to have pedantic back in, but it breaks CUDA
+	set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS} -Wall -Wextra -ansi -pedantic -Wdisabled-optimization")
+	set(CMAKE_CXX_FLAGS_RELEASE   "-O3")
+	set(CMAKE_CXX_FLAGS_DEBUG     "-g -O0 -fno-reorder-blocks -fno-schedule-insns -fno-inline")
+	set(CMAKE_CXX_FLAGS_DEBUGFULL "-g3 -fno-linline")
+endif(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_COMPILER_IS_GNUC)
+	set(CMAKE_C_FLAGS             "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -Wc++-compat -Wdisabled-optimization")
+	set(CMAKE_C_FLAGS_RELEASE     "-O3")
+	set(CMAKE_C_FLAGS_DEBUG       "-g -O0 -fno-reorder-blocks -fno-schedule-insns -fno-inline")
+	set(CMAKE_C_FLAGS_DEBUGFULL   "-g3 -fno-linline")
+endif(CMAKE_COMPILER_IS_GNUC)
+
 # We have an include directory
 include_directories(include)
 
