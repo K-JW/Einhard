@@ -28,7 +28,7 @@ namespace einhard
 
 	enum LogLevel{ ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 
-	inline char* getLogLevelString( const LogLevel level );
+	inline char const * getLogLevelString( const LogLevel level );
 
 	/**
 	 * A utility class that does not print anywhere.
@@ -40,9 +40,7 @@ namespace einhard
 			std::ostream * const out;
 
 		public:
-			OutputFormatter( std::ostream * const out ) : out( out ) { };
-
-			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( T msg ) const
+			OutputFormatter( std::ostream * const out ) : out( out )
 			{
 				if( out != 0 )
 				{
@@ -54,6 +52,7 @@ namespace einhard
 
 					// output it
 					*out << '[';
+					// FIXME does not properly use 00:00:00 format but will print stuff like 1:1:1
 					*out << timeinfo->tm_hour << ':' << timeinfo->tm_min << ':' << timeinfo->tm_sec;
 					*out << ']';
 					// TODO would be good to have this at least .01 seconds
@@ -61,14 +60,18 @@ namespace einhard
 
 					// output the log level of the message
 					*out << ' ' << getLogLevelString( VERBOSITY ) << ": ";
-
-					// output the log message
-					*out << msg;
 				}
+			}
+
+			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( T msg ) const
+			{
+				// output the log message
+				if( out != 0 )
+					*out << msg;
 
 				return *this;
 			}
-			
+
 			~OutputFormatter( )
 			{
 				if( out != 0 )
@@ -116,7 +119,7 @@ namespace einhard
 	 * IMPLEMENTATIONS
 	 */
 
-	inline char* getLogLevelString( const LogLevel level )
+	inline char const * getLogLevelString( const LogLevel level )
 	{
 		switch( level )
 		{
