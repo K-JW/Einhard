@@ -26,6 +26,12 @@
 namespace einhard
 {
 	static char const * const VERSION = "0.1";
+	
+	static char const ANSI_ESCAPE = 27;
+	static char const * const ANSI_COLOR_WARN = "[33m"; // yellow
+	static char const * const ANSI_COLOR_ERROR = "[31m"; // red
+	static char const * const ANSI_COLOR_FATAL = "[31m"; // red
+	static char const * const ANSI_COLOR_CLEAR = "[0m";
 
 	enum LogLevel{ ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 
@@ -50,6 +56,22 @@ namespace einhard
 					tm * timeinfo;
 					time( &rawtime );
 					timeinfo = localtime( &rawtime );
+					
+					// set color according to log level
+					switch ( VERBOSITY ) {
+						case WARN:
+							*out << ANSI_ESCAPE << ANSI_COLOR_WARN;
+							break;
+						case ERROR:
+							*out << ANSI_ESCAPE << ANSI_COLOR_ERROR;
+							break;
+						case FATAL:
+							*out << ANSI_ESCAPE << ANSI_COLOR_FATAL;
+							break;
+						default:
+							// in other cases we leave the default color
+							break;
+					}
 
 					// output it
 					*out << '[';
@@ -79,7 +101,21 @@ namespace einhard
 			~OutputFormatter( )
 			{
 				if( out != 0 )
+				{
+					// reset color according to log level
+					switch ( VERBOSITY ) {
+						case WARN:
+						case ERROR:
+						case FATAL:
+							*out << ANSI_ESCAPE << ANSI_COLOR_CLEAR;
+							break;
+						default:
+							// in other cases color is still default anyways
+							break;
+					}
+					
 					*out << std::endl; // TODO this would probably better be only '\n' as to not flush the buffers
+				}
 			}
 	};
 
