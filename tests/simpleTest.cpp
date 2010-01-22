@@ -49,6 +49,7 @@ int main( int, char** )
 		return 1;
 
 	baseLogger.setVerbosity( ALL );
+	baseLogger.setColorize( false );
 
 	baseLogger.info() << "The verbosity has now been set to " << baseLogger.getVerbosity() << " which is " << baseLogger.getVerbosityString();
 

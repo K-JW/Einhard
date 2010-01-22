@@ -44,10 +44,13 @@ namespace einhard
 	template<LogLevel VERBOSITY> class OutputFormatter
 	{
 		private:
+			// The output stream to print to
 			std::ostream * const out;
+			// Whether to colorize the output
+			bool const colorize;
 
 		public:
-			OutputFormatter( std::ostream * const out ) : out( out )
+			OutputFormatter( std::ostream * const out, bool const colorize ) : out( out ), colorize( colorize )
 			{
 				if( out != 0 )
 				{
@@ -57,20 +60,23 @@ namespace einhard
 					time( &rawtime );
 					timeinfo = localtime( &rawtime );
 					
-					// set color according to log level
-					switch ( VERBOSITY ) {
-						case WARN:
-							*out << ANSI_ESCAPE << ANSI_COLOR_WARN;
-							break;
-						case ERROR:
-							*out << ANSI_ESCAPE << ANSI_COLOR_ERROR;
-							break;
-						case FATAL:
-							*out << ANSI_ESCAPE << ANSI_COLOR_FATAL;
-							break;
-						default:
-							// in other cases we leave the default color
-							break;
+					if( colorize )
+					{
+						// set color according to log level
+						switch ( VERBOSITY ) {
+							case WARN:
+								*out << ANSI_ESCAPE << ANSI_COLOR_WARN;
+								break;
+							case ERROR:
+								*out << ANSI_ESCAPE << ANSI_COLOR_ERROR;
+								break;
+							case FATAL:
+								*out << ANSI_ESCAPE << ANSI_COLOR_FATAL;
+								break;
+							default:
+								// in other cases we leave the default color
+								break;
+						}
 					}
 
 					// output it
@@ -102,16 +108,18 @@ namespace einhard
 			{
 				if( out != 0 )
 				{
-					// reset color according to log level
-					switch ( VERBOSITY ) {
-						case WARN:
-						case ERROR:
-						case FATAL:
-							*out << ANSI_ESCAPE << ANSI_COLOR_CLEAR;
-							break;
-						default:
-							// in other cases color is still default anyways
-							break;
+					if( colorize ) {
+						// reset color according to log level
+						switch ( VERBOSITY ) {
+							case WARN:
+							case ERROR:
+							case FATAL:
+								*out << ANSI_ESCAPE << ANSI_COLOR_CLEAR;
+								break;
+							default:
+								// in other cases color is still default anyways
+								break;
+						}
 					}
 					
 					*out << std::endl; // TODO this would probably better be only '\n' as to not flush the buffers
@@ -123,9 +131,10 @@ namespace einhard
 	{
 		private:
 			LogLevel verbosity;
+			bool colorize;
 
 		public:
-			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity ) { };
+			Logger( const LogLevel verbosity = WARN, const bool colorize = true ) : verbosity( verbosity ), colorize( colorize ) { };
 
 			inline const OutputFormatter<TRACE> trace() const;
 			inline const OutputFormatter<DEBUG> debug() const;
@@ -152,6 +161,14 @@ namespace einhard
 			inline char const * getVerbosityString( ) const
 			{
 				return getLogLevelString( this->verbosity );
+			}
+			inline void setColorize( bool colorize )
+			{
+				this->colorize = colorize;
+			}
+			inline void getColorize( ) const
+			{
+				return this->colorize;
 			}
 	};
 
@@ -187,9 +204,9 @@ namespace einhard
 	template<LogLevel MAX> const OutputFormatter<TRACE> Logger<MAX>::trace() const
 	{
 		if( beTrace() )
-			return OutputFormatter<TRACE>( &std::cout );
+			return OutputFormatter<TRACE>( &std::cout, colorize );
 		else
-			return OutputFormatter<TRACE>( 0 );
+			return OutputFormatter<TRACE>( 0, colorize );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beTrace() const
@@ -204,9 +221,9 @@ namespace einhard
 	template<LogLevel MAX> const OutputFormatter<DEBUG> Logger<MAX>::debug() const
 	{
 		if( beDebug() )
-			return OutputFormatter<DEBUG>( &std::cout );
+			return OutputFormatter<DEBUG>( &std::cout, colorize );
 		else
-			return OutputFormatter<DEBUG>( 0 );
+			return OutputFormatter<DEBUG>( 0, colorize );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beDebug() const
@@ -221,9 +238,9 @@ namespace einhard
 	template<LogLevel MAX> const OutputFormatter<INFO> Logger<MAX>::info() const
 	{
 		if( beInfo() )
-			return OutputFormatter<INFO>( &std::cout );
+			return OutputFormatter<INFO>( &std::cout, colorize );
 		else
-			return OutputFormatter<INFO>( 0 );
+			return OutputFormatter<INFO>( 0, colorize );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beInfo() const
@@ -234,9 +251,9 @@ namespace einhard
 	template<LogLevel MAX> const OutputFormatter<WARN> Logger<MAX>::warn() const
 	{
 		if( beWarn() )
-			return OutputFormatter<WARN>( &std::cout );
+			return OutputFormatter<WARN>( &std::cout, colorize );
 		else
-			return OutputFormatter<WARN>( 0 );
+			return OutputFormatter<WARN>( 0, colorize );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beWarn() const
@@ -247,9 +264,9 @@ namespace einhard
 	template<LogLevel MAX> const OutputFormatter<ERROR> Logger<MAX>::error() const
 	{
 		if( beError() )
-			return OutputFormatter<ERROR>( &std::cout );
+			return OutputFormatter<ERROR>( &std::cout, colorize );
 		else
-			return OutputFormatter<ERROR>( 0 );
+			return OutputFormatter<ERROR>( 0, colorize );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beError() const
@@ -260,9 +277,9 @@ namespace einhard
 	template<LogLevel MAX> const OutputFormatter<FATAL> Logger<MAX>::fatal() const
 	{
 		if( beFatal() )
-			return OutputFormatter<FATAL>( &std::cout );
+			return OutputFormatter<FATAL>( &std::cout, colorize );
 		else
-			return OutputFormatter<FATAL>( 0 );
+			return OutputFormatter<FATAL>( 0, colorize );
 	}
 
 	template<LogLevel MAX> bool Logger<MAX>::beFatal() const
