@@ -21,6 +21,9 @@
 
 #include <einhard/einhard.hpp>
 
+#include <stdio.h>
+//#include <io.h>
+
 using namespace einhard;
 
 int main( int, char** )

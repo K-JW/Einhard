@@ -23,6 +23,9 @@
 #include <iomanip>
 #include <ctime>
 
+// This C header is sadly required to check whether writing to a terminal or a file
+#include <stdio.h>
+
 namespace einhard
 {
 	static char const * const VERSION = "0.1";
@@ -140,7 +143,12 @@ namespace einhard
 			bool colorize;
 
 		public:
-			Logger( const LogLevel verbosity = WARN, const bool colorize = true ) : verbosity( verbosity ), colorize( colorize ) { };
+			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity ) {
+				// use some, sadly not c++-ways to figure out whether we are writing ot a terminal
+				// only colorize when we are writing ot a terminal
+				colorize = isatty( fileno( stdout ) );
+			};
+			Logger( const LogLevel verbosity, const bool colorize ) : verbosity( verbosity ), colorize( colorize ) { };
 
 			inline const OutputFormatter<TRACE> trace() const;
 			inline const OutputFormatter<DEBUG> debug() const;
