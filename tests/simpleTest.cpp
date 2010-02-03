@@ -61,6 +61,10 @@ int main( int, char** )
 	baseLogger.error() << "Error output";
 	baseLogger.fatal() << "Fatal output";
 
+	baseLogger.info() << "Exponential float " << std::scientific << 1.0f;
+	baseLogger.info() << "Default float " << 1.0f;
+
+
 #ifdef NDEBUG
 	if( baseLogger.beTrace() )
 		return 1;

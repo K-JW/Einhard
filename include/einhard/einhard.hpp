@@ -108,6 +108,12 @@ namespace einhard
 			{
 				if( out != 0 )
 				{
+					// make sure there is no strange formatting set anymore
+					*out << std::resetiosflags(  std::ios_base::floatfield  | std::ios_base::basefield
+											   | std::ios_base::adjustfield | std::ios_base::uppercase
+											   | std::ios_base::showpos     | std::ios_base::showpoint
+											   | std::ios_base::showbase    |  std::ios_base::boolalpha );
+
 					if( colorize ) {
 						// reset color according to log level
 						switch ( VERBOSITY ) {
