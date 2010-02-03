@@ -1,6 +1,6 @@
 message(STATUS "Building Tests")
 
-add_executable(simpleTest simpleTest.cpp)
+add_executable(simpleTest simpleTest.cpp ../include/einhard/einhard.hpp)
 add_test(Simple simpleTest)
 
 add_executable(simpleTest_NDEBUG simpleTest.cpp)
