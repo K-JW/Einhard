@@ -303,4 +303,14 @@ namespace einhard
 
 }
 
+#define EINHARD_STREAM(arg) \
+template<einhard::LogLevel VERBOSITY> \
+inline const einhard::OutputFormatter<VERBOSITY>& operator<<(const einhard::OutputFormatter<VERBOSITY> &out, arg)
+#define EINHARD_STREAM_T1(T1, arg) \
+template<einhard::LogLevel VERBOSITY, T1> \
+inline const einhard::OutputFormatter<VERBOSITY>& operator<<(const einhard::OutputFormatter<VERBOSITY> &out, arg)
+#define EINHARD_STREAM_T2(T1, T2, arg1, arg2) \
+template<einhard::LogLevel VERBOSITY, T1, T2> \
+inline const einhard::OutputFormatter<VERBOSITY>& operator<<(const einhard::OutputFormatter<VERBOSITY> &out, arg1, arg2)
+
 // vim: ts=4 sw=4 tw=100 noet
