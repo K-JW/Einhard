@@ -64,6 +64,25 @@ int main( int, char** )
 	baseLogger.fatal() << "Fatal output";
 	baseLogger.info() << "Test some colors: " << Blue() << "blue " << "normal "
 	    << ~Cyan() << "cyan " << "cyan " << NoColor() << "normal";
+	baseLogger.info() << "Test all colors: "
+            << DGray()  << "darkgray "
+            << Black()  << "black "
+            << Red()    << "red "
+            << DRed()   << "darkred "
+            << Green()  << "green "
+            << DGreen() << "darkgreen "
+            << Yellow() << "yellow "
+            << Orange() << "orange "
+            << Blue()   << "blue "
+            << DBlue()    << "darkblue "
+            << Magenta()  << "magenta "
+            << DMagenta() << "darkmagenta "
+            << Cyan()     << "cyan "
+            << DCyan()    << "darkcyan "
+            << White()    << "white "
+            << Gray()     << "gray "
+            ;
+
 
 	baseLogger.setColorize( false );
 	baseLogger.info() << "Color is switched off now";
