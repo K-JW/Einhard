@@ -28,13 +28,14 @@
 
 namespace einhard
 {
-	static char const * const VERSION = "0.1";
+	static char const VERSION[] = "0.1";
 	
-	static char const ANSI_ESCAPE = 27;
-	static char const * const ANSI_COLOR_WARN = "[33m"; // yellow
-	static char const * const ANSI_COLOR_ERROR = "[31m"; // red
-	static char const * const ANSI_COLOR_FATAL = "[31m"; // red
-	static char const * const ANSI_COLOR_CLEAR = "[0m";
+	static char const ANSI_COLOR_WARN[]   = "\33[33m"; // orange
+	static char const ANSI_COLOR_ERROR[]  = "\33[31m"; // red
+	static char const ANSI_COLOR_FATAL[]  = "\33[31m"; // red
+	static char const ANSI_COLOR_INFO[]   = "\33[32m"; // green
+	static char const ANSI_COLOR_DEBUG[]  = "\33[01;34m"; // blue
+	static char const ANSI_COLOR_CLEAR[]  = "\33[0m";
 
 	enum LogLevel{ ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 
@@ -68,13 +69,19 @@ namespace einhard
 						// set color according to log level
 						switch ( VERBOSITY ) {
 							case WARN:
-								*out << ANSI_ESCAPE << ANSI_COLOR_WARN;
+								*out << ANSI_COLOR_WARN;
 								break;
 							case ERROR:
-								*out << ANSI_ESCAPE << ANSI_COLOR_ERROR;
+								*out << ANSI_COLOR_ERROR;
 								break;
 							case FATAL:
-								*out << ANSI_ESCAPE << ANSI_COLOR_FATAL;
+								*out << ANSI_COLOR_FATAL;
+								break;
+							case INFO:
+								*out << ANSI_COLOR_INFO;
+								break;
+							case DEBUG:
+								*out << ANSI_COLOR_DEBUG;
 								break;
 							default:
 								// in other cases we leave the default color
@@ -95,6 +102,22 @@ namespace einhard
 
 					// output the log level of the message
 					*out << ' ' << getLogLevelString( VERBOSITY ) << ": ";
+
+					if( colorize ) {
+						// reset color according to log level
+						switch ( VERBOSITY ) {
+							case INFO:
+							case DEBUG:
+							case WARN:
+							case ERROR:
+							case FATAL:
+								*out << ANSI_COLOR_CLEAR;
+								break;
+							default:
+								// in other cases color is still default anyways
+								break;
+						}
+					}
 				}
 			}
 
@@ -117,20 +140,6 @@ namespace einhard
 											   | std::ios_base::showpos     | std::ios_base::showpoint
 											   | std::ios_base::showbase    |  std::ios_base::boolalpha );
 
-					if( colorize ) {
-						// reset color according to log level
-						switch ( VERBOSITY ) {
-							case WARN:
-							case ERROR:
-							case FATAL:
-								*out << ANSI_ESCAPE << ANSI_COLOR_CLEAR;
-								break;
-							default:
-								// in other cases color is still default anyways
-								break;
-						}
-					}
-					
 					*out << std::endl; // TODO this would probably better be only '\n' as to not flush the buffers
 				}
 			}
