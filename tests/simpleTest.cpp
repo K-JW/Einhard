@@ -52,7 +52,6 @@ int main( int, char** )
 		return 1;
 
 	baseLogger.setVerbosity( ALL );
-	baseLogger.setColorize( false );
 
 	baseLogger.info() << "The verbosity has now been set to " << baseLogger.getVerbosity() << " which is " << baseLogger.getVerbosityString();
 
@@ -63,6 +62,21 @@ int main( int, char** )
 	baseLogger.warn() << "Warning output";
 	baseLogger.error() << "Error output";
 	baseLogger.fatal() << "Fatal output";
+	baseLogger.info() << "Test some colors: " << Blue() << "blue " << "normal "
+	    << ~Cyan() << "cyan " << "cyan " << NoColor() << "normal";
+
+	baseLogger.setColorize( false );
+	baseLogger.info() << "Color is switched off now";
+
+	baseLogger.trace() << "Trace output";
+	baseLogger.trace() << 2 << " times traced";
+	baseLogger.debug() << "Debug output";
+	baseLogger.info() << "Info output";
+	baseLogger.warn() << "Warning output";
+	baseLogger.error() << "Error output";
+	baseLogger.fatal() << "Fatal output";
+	baseLogger.info() << "Test some colors: " << Blue() << "blue " << "normal "
+	    << ~Cyan() << "cyan " << "cyan " << NoColor() << "normal";
 
 	baseLogger.info() << "Exponential float " << std::scientific << 1.0f;
 	baseLogger.info() << "Default float " << 1.0f;
