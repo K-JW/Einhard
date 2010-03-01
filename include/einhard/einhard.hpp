@@ -30,13 +30,6 @@ namespace einhard
 {
 	static char const VERSION[] = "0.1";
 	
-	static char const ANSI_COLOR_WARN[]   = "\33[33m"; // orange
-	static char const ANSI_COLOR_ERROR[]  = "\33[31m"; // red
-	static char const ANSI_COLOR_FATAL[]  = "\33[31m"; // red
-	static char const ANSI_COLOR_INFO[]   = "\33[32m"; // green
-	static char const ANSI_COLOR_DEBUG[]  = "\33[01;34m"; // blue
-	static char const ANSI_COLOR_CLEAR[]  = "\33[0m";
-
 	enum LogLevel{ ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 
 	inline char const * getLogLevelString( const LogLevel level );
@@ -55,14 +48,26 @@ namespace einhard
 	typedef Color<_##name> name
 
 	_COLOR(Red,     "01;31");
+	_COLOR(DRed,    "00;31");
 	_COLOR(Green,   "01;32");
-	_COLOR(Orange,  "00;33");
+	_COLOR(DGreen,  "00;32");
 	_COLOR(Yellow,  "01;33");
+	_COLOR(Orange,  "00;33");
 	_COLOR(Blue,    "01;34");
+	_COLOR(DBlue,   "00;34");
 	_COLOR(Magenta, "01;35");
+	_COLOR(DMagenta,"00;35");
 	_COLOR(Cyan,    "01;36");
+	_COLOR(DCyan,   "00;36");
 	_COLOR(NoColor, "0"    );
 #undef _COLOR
+
+#define ANSI_COLOR_WARN  _Orange::ANSI
+#define ANSI_COLOR_ERROR _DRed::ANSI
+#define ANSI_COLOR_FATAL _DRed::ANSI
+#define ANSI_COLOR_INFO  _DGreen::ANSI
+#define ANSI_COLOR_DEBUG _DBlue::ANSI
+#define ANSI_COLOR_CLEAR _NoColor::ANSI
 
 	/**
 	 * A utility class that does not print anywhere.
@@ -350,6 +355,13 @@ namespace einhard
 	}
 
 }
+
+#undef ANSI_COLOR_WARN
+#undef ANSI_COLOR_ERROR
+#undef ANSI_COLOR_FATAL
+#undef ANSI_COLOR_INFO
+#undef ANSI_COLOR_DEBUG
+#undef ANSI_COLOR_CLEAR
 
 #define EINHARD_STREAM(arg) \
 template<einhard::LogLevel VERBOSITY> \
