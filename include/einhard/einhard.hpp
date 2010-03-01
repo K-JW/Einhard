@@ -41,6 +41,29 @@ namespace einhard
 
 	inline char const * getLogLevelString( const LogLevel level );
 
+	template<typename Parent> struct Color
+	{
+		bool reset;
+		Color() : reset(true) {}
+		Color<Parent> operator~() const { Color<Parent> tmp(*this); tmp.reset = false; return tmp; }
+		char const *ansiCode() const { return Parent::ANSI; }
+		bool resetColor() const { return reset; }
+	};
+#define _COLOR(name, code) \
+	struct _##name { static char const ANSI[]; }; \
+	char const _##name::ANSI[] = "\33[" code "m"; \
+	typedef Color<_##name> name
+
+	_COLOR(Red,     "01;31");
+	_COLOR(Green,   "01;32");
+	_COLOR(Orange,  "00;33");
+	_COLOR(Yellow,  "01;33");
+	_COLOR(Blue,    "01;34");
+	_COLOR(Magenta, "01;35");
+	_COLOR(Cyan,    "01;36");
+	_COLOR(NoColor, "0"    );
+#undef _COLOR
+
 	/**
 	 * A utility class that does not print anywhere.
 	 * This allows to not print stuff.
@@ -52,9 +75,11 @@ namespace einhard
 			std::ostream * const out;
 			// Whether to colorize the output
 			bool const colorize;
+			mutable bool resetColor;
 
 		public:
-			OutputFormatter( std::ostream * const out, bool const colorize ) : out( out ), colorize( colorize )
+			OutputFormatter( std::ostream * const out, bool const colorize ) : out( out ), colorize( colorize ),
+				resetColor(false)
 			{
 				if( out != 0 )
 				{
@@ -121,11 +146,25 @@ namespace einhard
 				}
 			}
 
-			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( T msg ) const
+			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( const Color<T> &col ) const
+			{
+				if (out && colorize) {
+					*out << col.ansiCode();
+					resetColor = col.resetColor();
+				}
+				return *this;
+			}
+
+			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( const T &msg ) const
 			{
 				// output the log message
-				if( out != 0 )
+				if( out != 0 ) {
 					*out << msg;
+					if (resetColor) {
+						*out << ANSI_COLOR_CLEAR;
+						resetColor = false;
+					}
+				}
 
 				return *this;
 			}
