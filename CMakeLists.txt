@@ -37,3 +37,11 @@ if(BUILD_TESTING)
 	add_subdirectory(tests)
 endif(BUILD_TESTING)
 
+# Documentation
+include(FindDoxygen)
+if(DOXYGEN_FOUND)
+    add_subdirectory(doc)
+else(DOXYGEN_FOUND)
+    message(STATUS "WARNING: Failed to find Doxygen - won't build documentation")
+endif(DOXYGEN_FOUND)
+
