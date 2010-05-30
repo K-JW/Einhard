@@ -1,4 +1,6 @@
 /**
+ * @file
+ *
  * This is the main include file for Einhard.
  *
  * Copyright 2010 Matthias Bach <marix@marix.org>
@@ -19,6 +21,35 @@
  * along with Einhard.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/** \mainpage Einhard Logging Library
+ *
+ * \section intro_sec Introduction
+ *
+ * Einhard aims at being a lightweight logging library with the following features:
+ *  - Severity filtering
+ *  - Automatic output colorization
+ *  - Output timestamping
+ *  - Low performance overhead
+ *
+ * To use Einhard all you need to do is create an einhard::Logger object and push messages into its output
+ * streams.
+ *
+ * \code
+ * using namespace einhard;
+ * Logger logger( INFO );
+ * logger.trace() << "Trace message"; // will not be printed
+ * logger.error() << "Error message"; // will be printed
+ * \endcode
+ *
+ * To reduce the performance overhad you can specify NDEBUG during compile. This will disable trace
+ * and debug messages in a way that should allow the compilers dead code elimination to remove
+ * everything that is only pushed into such a stream.
+ *
+ * \section install_sec Installation
+ *
+ * There is no need to install Einhard. Just make sure the header file can be found by your compiler.
+ */
+
 #include <iostream>
 #include <iomanip>
 #include <ctime>
@@ -26,14 +57,39 @@
 // This C header is sadly required to check whether writing to a terminal or a file
 #include <stdio.h>
 
+/**
+ * This namespace contains all objects required for logging using Einhard.
+ */
 namespace einhard
 {
+	/**
+     * Version string of the Enhard library
+	 */
 	static char const VERSION[] = "0.1";
 	
-	enum LogLevel{ ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
+	/**
+     * Specification of the message severity.
+     *
+     * In output each level automatically includes the higher levels.
+     */
+	enum LogLevel{ ALL, /**< Log all message */
+				   TRACE, /**< The lowes severity for messages describing the program flow */
+                   DEBUG, /**< Debug messages */
+                   INFO, /**< Messages of informational nature, expected processing time e.g. */
+                   WARN, /**< Warning messages */
+                   ERROR, /**< Non-fatal errors */
+                   FATAL, /**< Messages that indicate terminal application failure */
+                   OFF /**< If selected no messages will be output */
+                  };
 
+	/**
+     * Retrieve a human readable representation of the given log level value.
+     */
 	inline char const * getLogLevelString( const LogLevel level );
 
+	/**
+     * A stream modifier that allows to colorize the log output.
+     */
 	template<typename Parent> struct Color
 	{
 		bool reset;
@@ -74,8 +130,7 @@ namespace einhard
 #define ANSI_COLOR_CLEAR _NoColor::ANSI
 
 	/**
-	 * A utility class that does not print anywhere.
-	 * This allows to not print stuff.
+	 * A wrapper for the output stream taking care proper formatting and colorization of the output.
 	 */
 	template<LogLevel VERBOSITY> class OutputFormatter
 	{
@@ -193,6 +248,15 @@ namespace einhard
 			}
 	};
 
+	/**
+     * A Logger object can be used to output messages to stdout.
+     *
+     * The Logger object is created with a certain verbosity. All messages of a more verbose
+     * LogLevel will be filtered out. The way the class is build this can happen at compile
+     * time up to the level restriction given by the template parameter.
+     *
+     * The class can automatically detect non-tty output and will not colorize output in that case.
+     */ 
 	template<LogLevel MAX = ALL> class Logger
 	{
 		private:
@@ -200,43 +264,87 @@ namespace einhard
 			bool colorize;
 
 		public:
+			/**
+			 * Create a new Logger object.
+			 *
+			 * The object will automatically colorize output on ttys and not colorize output
+			 * on non ttys.
+			 */
 			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity ) {
 				// use some, sadly not c++-ways to figure out whether we are writing ot a terminal
 				// only colorize when we are writing ot a terminal
 				colorize = isatty( fileno( stdout ) );
 			};
+			/**
+			 * Create a new Logger object explicitly selecting whether to colorize the output or not.
+			 *
+			 * Be aware that if output colorization is selected output will even be colorized if
+			 * output is to a non tty.
+			 */
 			Logger( const LogLevel verbosity, const bool colorize ) : verbosity( verbosity ), colorize( colorize ) { };
 
+			/** Access to the trace message stream. */
 			inline const OutputFormatter<TRACE> trace() const;
+			/** Access to the debug message stream. */
 			inline const OutputFormatter<DEBUG> debug() const;
+			/** Access to the info message stream. */
 			inline const OutputFormatter<INFO> info() const;
+			/** Access to the warning message stream. */
 			inline const OutputFormatter<WARN> warn() const;
+			/** Access to the error message stream. */
 			inline const OutputFormatter<ERROR> error() const;
+			/** Access to the fatal message stream. */
 			inline const OutputFormatter<FATAL> fatal() const;
 
+			/** Check whether trace messages will be output */
 			inline bool beTrace() const;
+			/** Check whether debug messages will be output */
 			inline bool beDebug() const;
+			/** Check whether info messages will be output */
 			inline bool beInfo() const;
+			/** Check whether warn messages will be output */
 			inline bool beWarn() const;
+			/** Check whether error messages will be output */
 			inline bool beError() const;
+			/** Check whether fatal messages will be output */
 			inline bool beFatal() const;
 
+			/** Modify the verbosity of the Logger.
+ 			 *
+			 * Be aware that the verbosity can not be increased over the level given by the template
+			 * parameter
+			 */
 			inline void setVerbosity( LogLevel verbosity )
 			{
 				this->verbosity = verbosity;
 			}
+			/** Retrieve the current log level.
+			 *
+			 * If you want to check whether messages of a certain LogLevel will be output the
+			 * methos beTrace(), beDebug(), beInfo(), beWarn(), beError() and beFatal() should be
+			 * preffered.
+			 */
 			inline LogLevel getVerbosity( ) const
 			{
 				return this->verbosity;
 			}
+			/**
+			 * Retrieve a human readable representation of the current log level
+			 */
 			inline char const * getVerbosityString( ) const
 			{
 				return getLogLevelString( this->verbosity );
 			}
+			/**
+			 * Select whether the output stream should be colorized.
+			 */
 			inline void setColorize( bool colorize )
 			{
 				this->colorize = colorize;
 			}
+			/**
+			 * Check whether the output stream is colorized.
+			 */
 			inline void getColorize( ) const
 			{
 				return this->colorize;
