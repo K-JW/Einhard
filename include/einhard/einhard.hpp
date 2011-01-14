@@ -47,7 +47,14 @@
  *
  * \section install_sec Installation
  *
- * There is no need to install Einhard. Just make sure the header file can be found by your compiler.
+ * Einhard is build using cmake. You can install it using the usual cmake triplet:
+ * |code
+ * cmake
+ * make
+ * sudo make install
+ * |endcode
+ * If you want to build a static lib or install to a custom path you can use the usual cmake
+ * utilities to adjust the configuration.
  */
 
 #include <iostream>
@@ -100,7 +107,6 @@ namespace einhard
 	};
 #define _COLOR(name, code) \
 	struct _##name { static char const ANSI[]; }; \
-	char const _##name::ANSI[] = "\33[" code "m"; \
 	typedef Color<_##name> name
 
 	_COLOR(DGray,   "01;30");

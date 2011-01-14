@@ -27,6 +27,11 @@ endif(CMAKE_COMPILER_IS_GNUC)
 # We have an include directory
 include_directories(include)
 
+# Allow the user to build a static lib
+option( BUILD_SHARED_LIBS "Build shared library" ON )
+# build the library
+add_library( einhard einhard.cpp )
+
 # Install the header files
 install(DIRECTORY include/einhard DESTINATION include)
 
