@@ -72,7 +72,7 @@ namespace einhard
 	/**
      * Version string of the Enhard library
 	 */
-	static char const VERSION[] = "0.2";
+	static char const VERSION[] = "0.2+";
 
 	/**
      * Specification of the message severity.
