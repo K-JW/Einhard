@@ -19,7 +19,7 @@
  * along with Einhard.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <einhard/einhard.hpp>
+#include "einhard.hpp"
 
 #include <stdio.h>
 //#include <io.h>

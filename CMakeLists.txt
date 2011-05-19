@@ -25,7 +25,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 # We have an include directory
-include_directories(include)
+include_directories(include/einhard)
 
 # Allow the user to build a static lib
 option( BUILD_SHARED_LIBS "Build shared library" ON )
