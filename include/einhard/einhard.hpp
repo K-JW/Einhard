@@ -102,11 +102,12 @@ namespace einhard
 		bool reset;
 		Color() : reset(true) {}
 		Color<Parent> operator~() const { Color<Parent> tmp(*this); tmp.reset = false; return tmp; }
-		char const *ansiCode() const { return Parent::ANSI; }
+		char const *ansiCode() const { return Parent::ANSI(); }
 		bool resetColor() const { return reset; }
 	};
 #define _COLOR(name, code) \
-	struct _##name { static char const ANSI[]; }; \
+	struct _##name { static char const * ANSI(); }; \
+	inline char const * _##name::ANSI() { return "\33[" code "m"; } \
 	typedef Color<_##name> name
 
 	_COLOR(DGray,   "01;30");
@@ -128,12 +129,12 @@ namespace einhard
 	_COLOR(NoColor, "0"    );
 #undef _COLOR
 
-#define ANSI_COLOR_WARN  _Orange::ANSI
-#define ANSI_COLOR_ERROR _DRed::ANSI
-#define ANSI_COLOR_FATAL _DRed::ANSI
-#define ANSI_COLOR_INFO  _DGreen::ANSI
-#define ANSI_COLOR_DEBUG _DBlue::ANSI
-#define ANSI_COLOR_CLEAR _NoColor::ANSI
+#define ANSI_COLOR_WARN  _Orange::ANSI()
+#define ANSI_COLOR_ERROR _DRed::ANSI()
+#define ANSI_COLOR_FATAL _DRed::ANSI()
+#define ANSI_COLOR_INFO  _DGreen::ANSI()
+#define ANSI_COLOR_DEBUG _DBlue::ANSI()
+#define ANSI_COLOR_CLEAR _NoColor::ANSI()
 
 	/**
 	 * A wrapper for the output stream taking care proper formatting and colorization of the output.
