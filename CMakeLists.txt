@@ -10,19 +10,18 @@ macro(add_target_property _target _prop _value)
    endif(NOT _oldprop)
 endmacro(add_target_property)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-# TODO would be nice to have pedantic back in, but it breaks CUDA
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER MATCHES "/clang\\+\\+$")
 	set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS} -Wall -Wextra -ansi -pedantic -Wdisabled-optimization")
 	set(CMAKE_CXX_FLAGS_RELEASE   "-O3")
 	set(CMAKE_CXX_FLAGS_DEBUG     "-g -O0 -fno-reorder-blocks -fno-schedule-insns -fno-inline")
 	set(CMAKE_CXX_FLAGS_DEBUGFULL "-g3 -fno-linline")
-endif(CMAKE_COMPILER_IS_GNUCXX)
-if(CMAKE_COMPILER_IS_GNUCC)
+endif(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER MATCHES "/clang\\+\\+$")
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER MATCHES "/clang$")
 	set(CMAKE_C_FLAGS             "${CMAKE_C_FLAGS} -Wall -Wextra -ansi -pedantic -Wc++-compat -Wdisabled-optimization")
 	set(CMAKE_C_FLAGS_RELEASE     "-O3")
 	set(CMAKE_C_FLAGS_DEBUG       "-g -O0 -fno-reorder-blocks -fno-schedule-insns -fno-inline")
 	set(CMAKE_C_FLAGS_DEBUGFULL   "-g3 -fno-linline")
-endif(CMAKE_COMPILER_IS_GNUCC)
+endif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER MATCHES "/clang$")
 
 # We have an include directory
 include_directories(include/einhard)
