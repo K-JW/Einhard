@@ -60,6 +60,7 @@
 #include <iostream>
 #include <iomanip>
 #include <ctime>
+#include <sstream>
 
 // This C header is sadly required to check whether writing to a terminal or a file
 #include <stdio.h>
@@ -139,17 +140,19 @@ namespace einhard
 	/**
 	 * A wrapper for the output stream taking care proper formatting and colorization of the output.
 	 */
-	template<LogLevel VERBOSITY> class OutputFormatter
+	template<LogLevel VERBOSITY, bool THREADSAFE> class OutputFormatter
 	{
 		private:
 			// The output stream to print to
 			std::ostream * const out;
+			std::ostream * const real_out; // required for threadsafe
 			// Whether to colorize the output
 			bool const colorize;
 			mutable bool resetColor;
 
 		public:
-			OutputFormatter( std::ostream * const out, bool const colorize ) : out( out ), colorize( colorize ),
+			OutputFormatter( std::ostream * const _out, bool const colorize )
+			 : out( THREADSAFE && _out ? new std::ostringstream("THREADSAFE") : _out ), real_out( _out ), colorize( colorize ),
 				resetColor(false)
 			{
 				if( out != 0 )
@@ -217,7 +220,7 @@ namespace einhard
 				}
 			}
 
-			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( const Color<T> &col ) const
+			template<typename T> inline const OutputFormatter<VERBOSITY, THREADSAFE>& operator<<( const Color<T> &col ) const
 			{
 				if (out && colorize) {
 					*out << col.ansiCode();
@@ -226,7 +229,7 @@ namespace einhard
 				return *this;
 			}
 
-			template<typename T> inline const OutputFormatter<VERBOSITY>& operator<<( const T &msg ) const
+			template<typename T> inline const OutputFormatter<VERBOSITY, THREADSAFE>& operator<<( const T &msg ) const
 			{
 				// output the log message
 				if( out != 0 ) {
@@ -251,6 +254,12 @@ namespace einhard
 											   | std::ios_base::showbase    |  std::ios_base::boolalpha );
 
 					*out << std::endl; // TODO this would probably better be only '\n' as to not flush the buffers
+
+					if( THREADSAFE ) {
+						std::ostringstream * buf = static_cast<std::ostringstream*>(out);
+						*real_out << buf->str();
+						delete buf;
+					}
 				}
 			}
 	};
@@ -264,7 +273,7 @@ namespace einhard
      *
      * The class can automatically detect non-tty output and will not colorize output in that case.
      */ 
-	template<LogLevel MAX = ALL> class Logger
+	template<LogLevel MAX = ALL, bool THREADSAFE = false> class Logger
 	{
 		private:
 			LogLevel verbosity;
@@ -291,17 +300,17 @@ namespace einhard
 			Logger( const LogLevel verbosity, const bool colorize ) : verbosity( verbosity ), colorize( colorize ) { };
 
 			/** Access to the trace message stream. */
-			inline const OutputFormatter<TRACE> trace() const;
+			inline const OutputFormatter<TRACE, THREADSAFE> trace() const;
 			/** Access to the debug message stream. */
-			inline const OutputFormatter<DEBUG> debug() const;
+			inline const OutputFormatter<DEBUG, THREADSAFE> debug() const;
 			/** Access to the info message stream. */
-			inline const OutputFormatter<INFO> info() const;
+			inline const OutputFormatter<INFO, THREADSAFE> info() const;
 			/** Access to the warning message stream. */
-			inline const OutputFormatter<WARN> warn() const;
+			inline const OutputFormatter<WARN, THREADSAFE> warn() const;
 			/** Access to the error message stream. */
-			inline const OutputFormatter<ERROR> error() const;
+			inline const OutputFormatter<ERROR, THREADSAFE> error() const;
 			/** Access to the fatal message stream. */
-			inline const OutputFormatter<FATAL> fatal() const;
+			inline const OutputFormatter<FATAL, THREADSAFE> fatal() const;
 
 			/** Check whether trace messages will be output */
 			inline bool beTrace() const;
@@ -387,15 +396,15 @@ namespace einhard
 		}
 	}
 
-	template<LogLevel MAX> const OutputFormatter<TRACE> Logger<MAX>::trace() const
+	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<TRACE, THREADSAFE> Logger<MAX, THREADSAFE>::trace() const
 	{
 		if( beTrace() )
-			return OutputFormatter<TRACE>( &std::cout, colorize );
+			return OutputFormatter<TRACE, THREADSAFE>( &std::cout, colorize );
 		else
-			return OutputFormatter<TRACE>( 0, colorize );
+			return OutputFormatter<TRACE, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beTrace() const
+	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beTrace() const
 	{
 #ifdef NDEBUG
 		return false;
@@ -404,15 +413,15 @@ namespace einhard
 #endif
 	}
 
-	template<LogLevel MAX> const OutputFormatter<DEBUG> Logger<MAX>::debug() const
+	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<DEBUG, THREADSAFE> Logger<MAX, THREADSAFE>::debug() const
 	{
 		if( beDebug() )
-			return OutputFormatter<DEBUG>( &std::cout, colorize );
+			return OutputFormatter<DEBUG, THREADSAFE>( &std::cout, colorize );
 		else
-			return OutputFormatter<DEBUG>( 0, colorize );
+			return OutputFormatter<DEBUG, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beDebug() const
+	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beDebug() const
 	{
 #ifdef NDEBUG
 		return false;
@@ -421,54 +430,54 @@ namespace einhard
 #endif
 	}
 
-	template<LogLevel MAX> const OutputFormatter<INFO> Logger<MAX>::info() const
+	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<INFO, THREADSAFE> Logger<MAX, THREADSAFE>::info() const
 	{
 		if( beInfo() )
-			return OutputFormatter<INFO>( &std::cout, colorize );
+			return OutputFormatter<INFO, THREADSAFE>( &std::cout, colorize );
 		else
-			return OutputFormatter<INFO>( 0, colorize );
+			return OutputFormatter<INFO, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beInfo() const
+	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beInfo() const
 	{
 		return ( MAX <= INFO && verbosity <= INFO );
 	}
 
-	template<LogLevel MAX> const OutputFormatter<WARN> Logger<MAX>::warn() const
+	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<WARN, THREADSAFE> Logger<MAX, THREADSAFE>::warn() const
 	{
 		if( beWarn() )
-			return OutputFormatter<WARN>( &std::cout, colorize );
+			return OutputFormatter<WARN, THREADSAFE>( &std::cout, colorize );
 		else
-			return OutputFormatter<WARN>( 0, colorize );
+			return OutputFormatter<WARN, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beWarn() const
+	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beWarn() const
 	{
 		return ( MAX <= WARN && verbosity <= WARN );
 	}
 
-	template<LogLevel MAX> const OutputFormatter<ERROR> Logger<MAX>::error() const
+	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<ERROR, THREADSAFE> Logger<MAX, THREADSAFE>::error() const
 	{
 		if( beError() )
-			return OutputFormatter<ERROR>( &std::cout, colorize );
+			return OutputFormatter<ERROR, THREADSAFE>( &std::cout, colorize );
 		else
-			return OutputFormatter<ERROR>( 0, colorize );
+			return OutputFormatter<ERROR, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beError() const
+	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beError() const
 	{
 		return ( MAX <= ERROR && verbosity <= ERROR );
 	}
 
-	template<LogLevel MAX> const OutputFormatter<FATAL> Logger<MAX>::fatal() const
+	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<FATAL, THREADSAFE> Logger<MAX, THREADSAFE>::fatal() const
 	{
 		if( beFatal() )
-			return OutputFormatter<FATAL>( &std::cout, colorize );
+			return OutputFormatter<FATAL, THREADSAFE>( &std::cout, colorize );
 		else
-			return OutputFormatter<FATAL>( 0, colorize );
+			return OutputFormatter<FATAL, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX> bool Logger<MAX>::beFatal() const
+	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beFatal() const
 	{
 		return ( MAX <= FATAL && verbosity <= FATAL );
 	}
@@ -483,13 +492,13 @@ namespace einhard
 #undef ANSI_COLOR_CLEAR
 
 #define EINHARD_STREAM(arg) \
-template<einhard::LogLevel VERBOSITY> \
-inline const einhard::OutputFormatter<VERBOSITY>& operator<<(const einhard::OutputFormatter<VERBOSITY> &out, arg)
+template<einhard::LogLevel VERBOSITY, bool THREADSAFE> \
+inline const einhard::OutputFormatter<VERBOSITY, THREADSAFE>& operator<<(const einhard::OutputFormatter<VERBOSITY, THREADSAFE> &out, arg)
 #define EINHARD_STREAM_T1(T1, arg) \
-template<einhard::LogLevel VERBOSITY, T1> \
-inline const einhard::OutputFormatter<VERBOSITY>& operator<<(const einhard::OutputFormatter<VERBOSITY> &out, arg)
+template<einhard::LogLevel VERBOSITY, bool THREADSAFE, T1> \
+inline const einhard::OutputFormatter<VERBOSITY, THREADSAFE>& operator<<(const einhard::OutputFormatter<VERBOSITY, THREADSAFE> &out, arg)
 #define EINHARD_STREAM_T2(T1, T2, arg1, arg2) \
-template<einhard::LogLevel VERBOSITY, T1, T2> \
-inline const einhard::OutputFormatter<VERBOSITY>& operator<<(const einhard::OutputFormatter<VERBOSITY> &out, arg1, arg2)
+template<einhard::LogLevel VERBOSITY, bool THREADSAFE, T1, T2> \
+inline const einhard::OutputFormatter<VERBOSITY, THREADSAFE>& operator<<(const einhard::OutputFormatter<VERBOSITY, THREADSAFE> &out, arg1, arg2)
 
 // vim: ts=4 sw=4 tw=100 noet

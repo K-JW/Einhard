@@ -26,15 +26,15 @@ struct callable
 {
 	private:
 		const unsigned id;
-		einhard::Logger<>& logger;
+		einhard::Logger<einhard::ALL, true>& logger;
 	public:
-		callable(const unsigned id, einhard::Logger<>& logger) : id(id), logger(logger) { };
+		callable(const unsigned id, einhard::Logger<einhard::ALL, true>& logger) : id(id), logger(logger) { };
 		void operator()();
 };
 
 int main( int, char** )
 {
-	einhard::Logger<> logger(einhard::INFO);
+	einhard::Logger<einhard::ALL, true> logger(einhard::INFO);
 
 	boost::thread t1(callable(1,logger));
 	boost::thread t2(callable(2,logger));
