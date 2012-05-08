@@ -152,7 +152,7 @@ namespace einhard
 
 		public:
 			OutputFormatter( std::ostream * const _out, bool const colorize )
-			 : out( THREADSAFE && _out ? new std::ostringstream("THREADSAFE") : _out ), real_out( _out ), colorize( colorize ),
+			 : out( THREADSAFE && _out ? new std::ostringstream() : _out ), real_out( _out ), colorize( colorize ),
 				resetColor(false)
 			{
 				if( out != 0 )
