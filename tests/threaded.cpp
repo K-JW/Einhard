@@ -26,15 +26,15 @@ struct callable
 {
 	private:
 		const unsigned id;
-		einhard::Logger<einhard::ALL, true>& logger;
+		einhard::Logger<einhard::INFO, true>& logger;
 	public:
-		callable(const unsigned id, einhard::Logger<einhard::ALL, true>& logger) : id(id), logger(logger) { };
+		callable(const unsigned id, einhard::Logger<einhard::INFO, true>& logger) : id(id), logger(logger) { };
 		void operator()();
 };
 
 int main( int, char** )
 {
-	einhard::Logger<einhard::ALL, true> logger(einhard::INFO);
+	einhard::Logger<einhard::INFO, true> logger(einhard::INFO);
 
 	boost::thread t1(callable(1,logger));
 	boost::thread t2(callable(2,logger));
@@ -49,9 +49,11 @@ int main( int, char** )
 
 void callable::operator()()
 {
+	logger.trace() << "!!! SHOULD NOT BE DISPLAYED !!!";
 	for(unsigned i = 0; i < 100; ++i) {
 		logger.info() << "Iteration " << i << " of thread " << id;
 	}
+	logger.trace() << "!!! SHOULD NOT BE DISPLAYED !!!";
 }
 
 // vim: ts=4 sw=4 tw=100 noet
