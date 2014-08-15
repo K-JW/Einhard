@@ -134,7 +134,7 @@ namespace einhard
 
 #define ANSI_COLOR_WARN  _Orange::ANSI()
 #define ANSI_COLOR_ERROR _DRed::ANSI()
-#define ANSI_COLOR_FATAL _DRed::ANSI()
+#define ANSI_COLOR_FATAL _Red::ANSI()
 #define ANSI_COLOR_INFO  _DGreen::ANSI()
 #define ANSI_COLOR_DEBUG _DBlue::ANSI()
 #define ANSI_COLOR_CLEAR _NoColor::ANSI()
