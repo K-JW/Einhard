@@ -140,6 +140,22 @@ namespace einhard
 #define ANSI_COLOR_CLEAR _NoColor::ANSI()
 
 	/**
+	 * A minimal class that implements the output stream operator to do nothing. This completely
+	 * eliminates the output stream statements from the resulting binary.
+	 */
+	struct DummyOutputFormatter
+	{
+		template <typename T>
+#ifdef __GNUC__
+			__attribute__((__always_inline__))
+#endif
+			DummyOutputFormatter &operator<<( const T & )
+		{
+			return *this;
+		}
+	};
+
+	/**
 	 * A wrapper for the output stream taking care proper formatting and colorization of the output.
 	 */
 	template<LogLevel VERBOSITY, bool THREADSAFE> class OutputFormatter
@@ -301,10 +317,36 @@ namespace einhard
 			 */
 			Logger( const LogLevel verbosity, const bool colorize ) : verbosity( verbosity ), colorize( colorize ) { };
 
+#ifdef NDEBUG
+			DummyOutputFormatter trace() const
+			{
+				return DummyOutputFormatter();
+			}
+#else
 			/** Access to the trace message stream. */
-			inline const OutputFormatter<TRACE, THREADSAFE> trace() const;
+			OutputFormatter<TRACE, THREADSAFE> trace() const
+			{
+				if( isEnabled<TRACE>() )
+					return OutputFormatter<TRACE, THREADSAFE>( &std::cout, colorize );
+				else
+					return OutputFormatter<TRACE, THREADSAFE>( 0, colorize );
+			}
+#endif
+#ifdef NDEBUG
+			DummyOutputFormatter debug() const
+			{
+				return DummyOutputFormatter();
+			}
+#else
 			/** Access to the debug message stream. */
-			inline const OutputFormatter<DEBUG, THREADSAFE> debug() const;
+			const OutputFormatter<DEBUG, THREADSAFE> debug() const
+			{
+				if (isEnabled<DEBUG>())
+					return OutputFormatter<DEBUG, THREADSAFE>( &std::cout, colorize );
+				else
+					return OutputFormatter<DEBUG, THREADSAFE>( 0, colorize );
+			}
+#endif
 			/** Access to the info message stream. */
 			inline const OutputFormatter<INFO, THREADSAFE> info() const;
 			/** Access to the warning message stream. */
@@ -314,18 +356,15 @@ namespace einhard
 			/** Access to the fatal message stream. */
 			inline const OutputFormatter<FATAL, THREADSAFE> fatal() const;
 
-			/** Check whether trace messages will be output */
-			inline bool beTrace() const;
-			/** Check whether debug messages will be output */
-			inline bool beDebug() const;
-			/** Check whether info messages will be output */
-			inline bool beInfo() const;
-			/** Check whether warn messages will be output */
-			inline bool beWarn() const;
-			/** Check whether error messages will be output */
-			inline bool beError() const;
-			/** Check whether fatal messages will be output */
-			inline bool beFatal() const;
+			template <LogLevel LEVEL> bool isEnabled() const
+			{
+#ifdef NDEBUG
+				if( LEVEL == DEBUG || LEVEL == TRACE ) {
+					return false;
+				}
+#endif
+				return ( MAX <= LEVEL && verbosity <= LEVEL );
+			}
 
 			/** Modify the verbosity of the Logger.
  			 *
@@ -339,7 +378,7 @@ namespace einhard
 			/** Retrieve the current log level.
 			 *
 			 * If you want to check whether messages of a certain LogLevel will be output the
-			 * methos beTrace(), beDebug(), beInfo(), beWarn(), beError() and beFatal() should be
+			 * method isEnabled() should be
 			 * preffered.
 			 */
 			inline LogLevel getVerbosity( ) const
@@ -398,90 +437,36 @@ namespace einhard
 		}
 	}
 
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<TRACE, THREADSAFE> Logger<MAX, THREADSAFE>::trace() const
-	{
-		if( beTrace() )
-			return OutputFormatter<TRACE, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<TRACE, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beTrace() const
-	{
-#ifdef NDEBUG
-		return false;
-#else
-		return ( MAX <= TRACE && verbosity <= TRACE );
-#endif
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<DEBUG, THREADSAFE> Logger<MAX, THREADSAFE>::debug() const
-	{
-		if( beDebug() )
-			return OutputFormatter<DEBUG, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<DEBUG, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beDebug() const
-	{
-#ifdef NDEBUG
-		return false;
-#else
-		return ( MAX <= DEBUG && verbosity <= DEBUG );
-#endif
-	}
-
 	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<INFO, THREADSAFE> Logger<MAX, THREADSAFE>::info() const
 	{
-		if( beInfo() )
+		if( isEnabled<INFO>() )
 			return OutputFormatter<INFO, THREADSAFE>( &std::cout, colorize );
 		else
 			return OutputFormatter<INFO, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beInfo() const
-	{
-		return ( MAX <= INFO && verbosity <= INFO );
-	}
-
 	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<WARN, THREADSAFE> Logger<MAX, THREADSAFE>::warn() const
 	{
-		if( beWarn() )
+		if( isEnabled<WARN>() )
 			return OutputFormatter<WARN, THREADSAFE>( &std::cout, colorize );
 		else
 			return OutputFormatter<WARN, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beWarn() const
-	{
-		return ( MAX <= WARN && verbosity <= WARN );
-	}
-
 	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<ERROR, THREADSAFE> Logger<MAX, THREADSAFE>::error() const
 	{
-		if( beError() )
+		if( isEnabled<ERROR>() )
 			return OutputFormatter<ERROR, THREADSAFE>( &std::cout, colorize );
 		else
 			return OutputFormatter<ERROR, THREADSAFE>( 0, colorize );
 	}
 
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beError() const
-	{
-		return ( MAX <= ERROR && verbosity <= ERROR );
-	}
-
 	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<FATAL, THREADSAFE> Logger<MAX, THREADSAFE>::fatal() const
 	{
-		if( beFatal() )
+		if( isEnabled<FATAL>() )
 			return OutputFormatter<FATAL, THREADSAFE>( &std::cout, colorize );
 		else
 			return OutputFormatter<FATAL, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beFatal() const
-	{
-		return ( MAX <= FATAL && verbosity <= FATAL );
 	}
 
 }

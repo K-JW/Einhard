@@ -38,17 +38,17 @@ int main( int, char** )
 	baseLogger.error() << "Error output";
 	baseLogger.fatal() << "Fatal output";
 
-	if( baseLogger.beTrace() )
+	if( baseLogger.isEnabled<TRACE>() )
 		return 1;
-	if( baseLogger.beDebug() )
+	if( baseLogger.isEnabled<DEBUG>() )
 		return 1;
-	if( baseLogger.beInfo() )
+	if( baseLogger.isEnabled<INFO>() )
 		return 1;
-	if( ! baseLogger.beWarn() )
+	if( ! baseLogger.isEnabled<WARN>() )
 		return 1;
-	if( ! baseLogger.beError() )
+	if( ! baseLogger.isEnabled<ERROR>() )
 		return 1;
-	if( ! baseLogger.beFatal() )
+	if( ! baseLogger.isEnabled<FATAL>() )
 		return 1;
 
 	baseLogger.setVerbosity( ALL );
@@ -102,23 +102,23 @@ int main( int, char** )
 
 
 #ifdef NDEBUG
-	if( baseLogger.beTrace() )
+	if( baseLogger.isEnabled<TRACE>() )
 		return 1;
-	if( baseLogger.beDebug() )
+	if( baseLogger.isEnabled<DEBUG>() )
 		return 1;
 #else
-	if( ! baseLogger.beTrace() )
+	if( ! baseLogger.isEnabled<TRACE>() )
 		return 1;
-	if( ! baseLogger.beDebug() )
+	if( ! baseLogger.isEnabled<DEBUG>() )
 		return 1;
 #endif
-	if( ! baseLogger.beInfo() )
+	if( ! baseLogger.isEnabled<INFO>() )
 		return 1;
-	if( ! baseLogger.beWarn() )
+	if( ! baseLogger.isEnabled<WARN>() )
 		return 1;
-	if( ! baseLogger.beError() )
+	if( ! baseLogger.isEnabled<ERROR>() )
 		return 1;
-	if( ! baseLogger.beFatal() )
+	if( ! baseLogger.isEnabled<FATAL>() )
 		return 1;
 
 	// No news are good news
