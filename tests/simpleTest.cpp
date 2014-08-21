@@ -21,6 +21,7 @@
 
 #include "einhard.hpp"
 
+#include <cstring>
 #include <stdio.h>
 //#include <io.h>
 
@@ -29,6 +30,7 @@ using namespace einhard;
 int main( int, char** )
 {
 	Logger<> baseLogger;
+	baseLogger.setAreaName( "base" );
 
 	baseLogger.trace() << "Trace output";
 	baseLogger.trace() << 2 << " times traced";
