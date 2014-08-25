@@ -58,9 +58,11 @@
  * utilities to adjust the configuration.
  */
 
+#include <assert.h>
 #include <iostream>
 #include <iomanip>
 #include <ctime>
+#include <cstring>
 #include <sstream>
 #include <bitset>
 
@@ -277,7 +279,7 @@ namespace einhard
 	template<LogLevel MAX = ALL> class Logger
 	{
 		private:
-			const char *areaName = nullptr;
+			char areaName[32 - sizeof( LogLevel ) - sizeof( bool )] = {'\0'};
 			LogLevel verbosity;
 			bool colorize;
 
@@ -308,13 +310,20 @@ namespace einhard
 			 * place in the code where the output is coming from. This can be used to
 			 * identify the different Logger objects in the log output.
 			 *
-			 * \param name A pointer to a constant string. The pointer must stay valid
-			 *             for as long as the Logger object is used. You may set this to nullptr to
-			 *             unset the name.
+			 * \param name A string. Only the first 30, or so, characters will be used. The rest
+			 *             will not be displayed. You can reset the name with an empty string.
+			 * \warning Passing a nullptr is not allowed!
 			 */
 			void setAreaName( const char *name )
 			{
-				areaName = name;
+				assert( name );
+				std::strncpy( &areaName[0], name, sizeof( areaName ) - 1 );
+				areaName[sizeof( areaName ) - 1] = '\0';
+			}
+			EINHARD_ALWAYS_INLINE_
+			void setAreaName( const std::string &name )
+			{
+				setAreaName(name.c_str());
 			}
 
 			/** Access to the trace message stream. */

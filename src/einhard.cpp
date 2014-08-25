@@ -111,7 +111,7 @@ template <LogLevel VERBOSITY> void OutputFormatter::doInit( const char *areaName
 
 	// output the log level and logging area of the message
 	*out << ' ' << getLogLevelString<VERBOSITY>();
-	if( areaName )
+	if( areaName && areaName[0] != '\0' )
 	{
 		*out << ' ' << areaName;
 	}
