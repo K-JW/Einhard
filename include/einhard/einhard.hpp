@@ -174,11 +174,12 @@ namespace einhard
 	 */
 	struct DummyOutputFormatter
 	{
-		template <typename T>
-#ifdef __GNUC__
-			__attribute__((__always_inline__))
-#endif
-			DummyOutputFormatter &operator<<( const T & ) noexcept
+		template <typename T> EINHARD_ALWAYS_INLINE_ DummyOutputFormatter &operator<<( const T & ) noexcept
+		{
+			return *this;
+		}
+		EINHARD_ALWAYS_INLINE_ DummyOutputFormatter &operator<<(
+		    std::ostream &( *manip )( std::ostream & ) ) noexcept
 		{
 			return *this;
 		}
@@ -224,6 +225,15 @@ namespace einhard
 				{
 					*out << col.ansiCode();
 					resetColor = col.resetColor();
+				}
+				return *this;
+			}
+
+			EINHARD_ALWAYS_INLINE_ OutputFormatter &operator<<( std::ostream &( *manip )( std::ostream & ) )
+			{
+				if( enabled )
+				{
+					*out << manip;
 				}
 				return *this;
 			}
