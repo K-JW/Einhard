@@ -106,8 +106,25 @@ namespace einhard
 
 	/**
 	 * Retrieve a human readable representation of the given log level value.
+	 *
+	 * The overload can optimize better because it can determine the LogLevel at compile time.
 	 */
 	template <LogLevel> const char *getLogLevelString() noexcept;
+	/**
+	 * Overload of the above function for situations where the LogLevel \p level is only determined at run time.
+	 */
+	const char *getLogLevelString( LogLevel level );
+
+	/**
+	 * Compares the string \p level against the strings for LogLevel and returns the one it matches.
+	 *
+	 * \param level A string, which is a textual representation of one of the
+	 *              LogLevel enumerators.
+	 * \return The enumerator that matches the input string.
+	 * \throws std::invalid_argument if the string does not match any enumerator.
+	 */
+	LogLevel getLogLevel( const std::string &level );
+
 	template <LogLevel> const char *colorForLogLevel() noexcept;
 
 	/**
@@ -411,27 +428,7 @@ namespace einhard
 			 */
 			inline char const * getVerbosityString( ) const
 			{
-				switch( verbosity )
-				{
-				case TRACE:
-					return getLogLevelString<TRACE>();
-				case DEBUG:
-					return getLogLevelString<DEBUG>();
-				case INFO:
-					return getLogLevelString<INFO>();
-				case WARN:
-					return getLogLevelString<WARN>();
-				case ERROR:
-					return getLogLevelString<ERROR>();
-				case FATAL:
-					return getLogLevelString<FATAL>();
-				case ALL:
-					return getLogLevelString<ALL>();
-				case OFF:
-					return getLogLevelString<OFF>();
-				}
-				// FIXME: better this would throw...
-				return "";
+				return getLogLevelString(verbosity);
 			}
 			/**
 			 * Select whether the output stream should be colorized.

@@ -19,6 +19,7 @@
  */
 
 #include <einhard.hpp>
+#include <stdexcept>
 
 namespace einhard
 {
@@ -81,6 +82,55 @@ template <> char const *getLogLevelString<FATAL>() noexcept
 template <> char const *getLogLevelString<OFF>() noexcept
 {
 	return "  OFF";
+}
+
+const char *getLogLevelString( LogLevel level )
+{
+	switch( level )
+	{
+	case TRACE:
+		return getLogLevelString<TRACE>();
+	case DEBUG:
+		return getLogLevelString<DEBUG>();
+	case INFO:
+		return getLogLevelString<INFO>();
+	case WARN:
+		return getLogLevelString<WARN>();
+	case ERROR:
+		return getLogLevelString<ERROR>();
+	case FATAL:
+		return getLogLevelString<FATAL>();
+	case ALL:
+		return getLogLevelString<ALL>();
+	case OFF:
+		return getLogLevelString<OFF>();
+	}
+	// FIXME: better this would throw...
+	return "";
+}
+
+LogLevel getLogLevel( const std::string &level) {
+  if (level == "ALL") {
+    return einhard::ALL;
+  } else if (level == "TRACE") {
+    return einhard::TRACE;
+  } else if (level == "DEBUG") {
+    return einhard::DEBUG;
+  } else if (level == "INFO") {
+    return einhard::INFO;
+  } else if (level == "WARN") {
+    return einhard::WARN;
+  } else if (level == "ERROR") {
+    return einhard::ERROR;
+  } else if (level == "FATAL") {
+    return einhard::FATAL;
+  } else if (level == "OFF") {
+    return einhard::OFF;
+  } else {
+    throw std::invalid_argument("invalid logging level " + level +
+                                ". Accepted values are ALL, TRACE, DEBUG, "
+                                "INFO, WARN, ERROR, FATAL, and OFF.");
+  }
 }
 
 template <LogLevel VERBOSITY> void OutputFormatter::doInit( const char *areaName )
