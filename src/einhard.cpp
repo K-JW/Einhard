@@ -151,9 +151,9 @@ template <LogLevel VERBOSITY> void OutputFormatter::doInit( const char *areaName
 	// output it
 	*out << '[';
 	*out << std::setfill( '0' ) << std::setw( 2 ) << timeinfo->tm_hour;
-	*out << ':';
+	*out << '\'';
 	*out << std::setfill( '0' ) << std::setw( 2 ) << timeinfo->tm_min;
-	*out << ':';
+	*out << '\'';
 	*out << std::setfill( '0' ) << std::setw( 2 ) << timeinfo->tm_sec;
 	*out << ']';
 	// TODO would be good to have this at least .01 seconds
