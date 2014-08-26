@@ -198,7 +198,7 @@ namespace einhard
 			return *this;
 		}
 		EINHARD_ALWAYS_INLINE_ DummyOutputFormatter &operator<<(
-		    std::ostream &( *manip )( std::ostream & ) ) noexcept
+		    std::ostream &( * )( std::ostream & ) ) noexcept
 		{
 			return *this;
 		}
