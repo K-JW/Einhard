@@ -204,9 +204,6 @@ namespace einhard
 		}
 	};
 
-	// The output stream to print to
-	extern thread_local std::ostringstream t_out;
-
 	class UnconditionalOutput
 	{
 	private:

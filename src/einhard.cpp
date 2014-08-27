@@ -24,7 +24,10 @@
 namespace einhard
 {
 char const VERSION[] = "0.4";
+namespace
+{
 thread_local std::ostringstream t_out;
+}  // unnamed namespace
 
 template <> const char *colorForLogLevel<TRACE>() noexcept
 {
