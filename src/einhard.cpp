@@ -179,14 +179,14 @@ template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *area
 	}
 	*out << ": ";
 
+	indent = out->str().size();
 	if( colorize )
 	{
-		indent = out->str().size() - sizeof(colorForLogLevel<VERBOSITY>());
+		// The bytes from the ANSI color code don't appear on screen and thus must be subtracted from the indent
+		// value. We still make an error if the areaName contains multi-byte (utf-8) characters. At
+		// this point that's just not supported.
+		indent -= sizeof( "\33[00;30m" ) - 1;  // sizeof includes the trailing \0
 		*out << NoColor_t_::ANSI();
-	}
-	else
-	{
-		indent = out->str().size();
 	}
 }
 

@@ -84,6 +84,7 @@ int main( int, char** )
             << White()    << "white "
             << Gray()     << "gray "
             ;
+	baseLogger.info() << "Testing\nMultiline\nOutput with color\n";
 
 
 	baseLogger.setColorize( false );
@@ -101,6 +102,7 @@ int main( int, char** )
 
 	baseLogger.info() << "Exponential float " << std::scientific << 1.0f;
 	baseLogger.info() << "Default float " << 1.0f;
+	baseLogger.info() << "Testing\nMultiline\nOutput without color\n";
 
 
 #ifdef NDEBUG
