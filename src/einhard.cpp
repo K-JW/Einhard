@@ -158,13 +158,16 @@ template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *area
 	timeinfo = localtime( &rawtime );
 
 	// output it
+	const auto oldFill = out->fill();
+	out->fill( '0' );
 	*out << '[';
-	*out << std::setfill( '0' ) << std::setw( 2 ) << timeinfo->tm_hour;
+	*out << std::setw( 2 ) << timeinfo->tm_hour;
 	*out << '\'';
-	*out << std::setfill( '0' ) << std::setw( 2 ) << timeinfo->tm_min;
+	*out << std::setw( 2 ) << timeinfo->tm_min;
 	*out << '\'';
-	*out << std::setfill( '0' ) << std::setw( 2 ) << timeinfo->tm_sec;
+	*out << std::setw( 2 ) << timeinfo->tm_sec;
 	*out << ']';
+	out->fill( oldFill );
 	// TODO would be good to have this at least .01 seconds
 	// for non-console output pure timestamp would probably be better
 
