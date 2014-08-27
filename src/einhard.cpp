@@ -24,10 +24,12 @@
 namespace einhard
 {
 char const VERSION[] = "0.4";
+#ifndef EINHARD_NO_THREAD_LOCAL
 namespace
 {
 thread_local std::ostringstream t_out;
 }  // unnamed namespace
+#endif
 
 template <> const char *colorForLogLevel<TRACE>() noexcept
 {
@@ -138,7 +140,11 @@ LogLevel getLogLevel( const std::string &level) {
 
 template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *areaName )
 {
+#ifdef EINHARD_NO_THREAD_LOCAL
+	out = &realOut;
+#else
 	out = &t_out;
+#endif
 	if( colorize )
 	{
 		// set color according to log level
