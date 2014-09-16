@@ -115,27 +115,27 @@ const char *getLogLevelString( LogLevel level )
 }
 
 LogLevel getLogLevel( const std::string &level) {
-  if (level == "ALL") {
-    return einhard::ALL;
-  } else if (level == "TRACE") {
-    return einhard::TRACE;
-  } else if (level == "DEBUG") {
-    return einhard::DEBUG;
-  } else if (level == "INFO") {
-    return einhard::INFO;
-  } else if (level == "WARN") {
-    return einhard::WARN;
-  } else if (level == "ERROR") {
-    return einhard::ERROR;
-  } else if (level == "FATAL") {
-    return einhard::FATAL;
-  } else if (level == "OFF") {
-    return einhard::OFF;
-  } else {
-    throw std::invalid_argument("invalid logging level " + level +
-                                ". Accepted values are ALL, TRACE, DEBUG, "
-                                "INFO, WARN, ERROR, FATAL, and OFF.");
-  }
+	if (level == "ALL") {
+		return einhard::ALL;
+	} else if (level == "TRACE") {
+		return einhard::TRACE;
+	} else if (level == "DEBUG") {
+		return einhard::DEBUG;
+	} else if (level == "INFO") {
+		return einhard::INFO;
+	} else if (level == "WARN") {
+		return einhard::WARN;
+	} else if (level == "ERROR") {
+		return einhard::ERROR;
+	} else if (level == "FATAL") {
+		return einhard::FATAL;
+	} else if (level == "OFF") {
+		return einhard::OFF;
+	} else {
+		throw std::invalid_argument("invalid logging level " + level +
+		                            ". Accepted values are ALL, TRACE, DEBUG, "
+		                            "INFO, WARN, ERROR, FATAL, and OFF.");
+	}
 }
 
 template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *areaName )
