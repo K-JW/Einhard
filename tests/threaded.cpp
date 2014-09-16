@@ -1,5 +1,5 @@
 /**
- * Tests Einhard output if multipel threads are involved
+ * Tests Einhard output if multiple threads are involved
  *
  * Copyright 2012 Matthias Bach <marix@marix.org>
  *
