@@ -102,7 +102,7 @@ namespace einhard
 	enum LogLevel
 	{
 		ALL,   /**< Log all message */
-		TRACE, /**< The lowes severity for messages describing the program flow */
+		TRACE, /**< The lowest severity for messages describing the program flow */
 		DEBUG, /**< Debug messages */
 		INFO,  /**< Messages of informational nature, expected processing time e.g. */
 		WARN,  /**< Warning messages */
