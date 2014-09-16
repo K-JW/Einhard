@@ -1,3 +1,18 @@
+2014-XX-XX - Version 0.4
+ * Support for multi-line log messages
+ * Use “'” as time separator instead of “:”. This is an incompatible change!
+ * Re-introduced the library for faster compilation of code using Einhard.
+ * Support logging from multiple threads
+ * Clang support
+
+2011-11-10 - Version 0.3
+ * Header-only implementation
+
+2011-05-18 - Version 0.2
+ * Coloured output when writing to a terminal
+ * Suppress compilation of DEBUG and TRACE output if “NDEBUG” is defined.
+ * Allow using Einhard in multiple source files.
+
 2010-01-12 - Version 0.1:
  * Basic Logging
  * Supression of low relevance messages
