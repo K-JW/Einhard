@@ -23,8 +23,12 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER MATCHES "/clang$")
 	set(CMAKE_C_FLAGS_DEBUGFULL   "-g3 -fno-linline")
 endif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER MATCHES "/clang$")
 
+set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS} -std=c++11")
+
 # We have an include directory
 include_directories(include/einhard)
+
+add_library(einhard src/einhard.cpp)
 
 # Install the header files
 install(DIRECTORY include/einhard DESTINATION include)

@@ -21,6 +21,7 @@
 
 #include "einhard.hpp"
 
+#include <cstring>
 #include <stdio.h>
 //#include <io.h>
 
@@ -29,6 +30,7 @@ using namespace einhard;
 int main( int, char** )
 {
 	Logger<> baseLogger;
+	baseLogger.setAreaName( "base" );
 
 	baseLogger.trace() << "Trace output";
 	baseLogger.trace() << 2 << " times traced";
@@ -38,17 +40,17 @@ int main( int, char** )
 	baseLogger.error() << "Error output";
 	baseLogger.fatal() << "Fatal output";
 
-	if( baseLogger.beTrace() )
+	if( baseLogger.isEnabled<TRACE>() )
 		return 1;
-	if( baseLogger.beDebug() )
+	if( baseLogger.isEnabled<DEBUG>() )
 		return 1;
-	if( baseLogger.beInfo() )
+	if( baseLogger.isEnabled<INFO>() )
 		return 1;
-	if( ! baseLogger.beWarn() )
+	if( ! baseLogger.isEnabled<WARN>() )
 		return 1;
-	if( ! baseLogger.beError() )
+	if( ! baseLogger.isEnabled<ERROR>() )
 		return 1;
-	if( ! baseLogger.beFatal() )
+	if( ! baseLogger.isEnabled<FATAL>() )
 		return 1;
 
 	baseLogger.setVerbosity( ALL );
@@ -82,6 +84,7 @@ int main( int, char** )
             << White()    << "white "
             << Gray()     << "gray "
             ;
+	baseLogger.info() << "Testing\nMultiline\nOutput with color\n";
 
 
 	baseLogger.setColorize( false );
@@ -99,26 +102,27 @@ int main( int, char** )
 
 	baseLogger.info() << "Exponential float " << std::scientific << 1.0f;
 	baseLogger.info() << "Default float " << 1.0f;
+	baseLogger.info() << "Testing\nMultiline\nOutput without color\n";
 
 
 #ifdef NDEBUG
-	if( baseLogger.beTrace() )
+	if( baseLogger.isEnabled<TRACE>() )
 		return 1;
-	if( baseLogger.beDebug() )
+	if( baseLogger.isEnabled<DEBUG>() )
 		return 1;
 #else
-	if( ! baseLogger.beTrace() )
+	if( ! baseLogger.isEnabled<TRACE>() )
 		return 1;
-	if( ! baseLogger.beDebug() )
+	if( ! baseLogger.isEnabled<DEBUG>() )
 		return 1;
 #endif
-	if( ! baseLogger.beInfo() )
+	if( ! baseLogger.isEnabled<INFO>() )
 		return 1;
-	if( ! baseLogger.beWarn() )
+	if( ! baseLogger.isEnabled<WARN>() )
 		return 1;
-	if( ! baseLogger.beError() )
+	if( ! baseLogger.isEnabled<ERROR>() )
 		return 1;
-	if( ! baseLogger.beFatal() )
+	if( ! baseLogger.isEnabled<FATAL>() )
 		return 1;
 
 	// No news are good news

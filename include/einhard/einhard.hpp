@@ -4,6 +4,7 @@
  * This is the main include file for Einhard.
  *
  * Copyright 2010 Matthias Bach <marix@marix.org>
+ * Copyright 2014 Matthias Kretz <kretz@kde.org>
  *
  * This file is part of Einhard.
  * 
@@ -57,13 +58,31 @@
  * utilities to adjust the configuration.
  */
 
+#include <assert.h>
 #include <iostream>
 #include <iomanip>
 #include <ctime>
+#include <cstring>
 #include <sstream>
+#include <bitset>
 
 // This C header is sadly required to check whether writing to a terminal or a file
-#include <stdio.h>
+#include <cstdio>
+
+#include <unistd.h>  // for isatty
+
+#ifdef __GNUC__
+#define EINHARD_ALWAYS_INLINE_ __attribute__((always_inline))
+#else
+#define EINHARD_ALWAYS_INLINE_
+#endif
+
+// Error on MacOS:
+//    “thread-local storage is unsupported for the current target”
+// To enable a workaround the EINHARD_NO_THREAD_LOCAL macro must be defined.
+#ifdef __APPLE__
+#define EINHARD_NO_THREAD_LOCAL 1
+#endif
 
 /**
  * This namespace contains all objects required for logging using Einhard.
@@ -71,45 +90,90 @@
 namespace einhard
 {
 	/**
-     * Version string of the Einhard library
+	 * Version string of the Einhard library
 	 */
-	static char const VERSION[] = "0.3+";
+	extern char const VERSION[];
 
 	/**
-     * Specification of the message severity.
-     *
-     * In output each level automatically includes the higher levels.
-     */
-	enum LogLevel{ ALL, /**< Log all message */
-				   TRACE, /**< The lowes severity for messages describing the program flow */
-                   DEBUG, /**< Debug messages */
-                   INFO, /**< Messages of informational nature, expected processing time e.g. */
-                   WARN, /**< Warning messages */
-                   ERROR, /**< Non-fatal errors */
-                   FATAL, /**< Messages that indicate terminal application failure */
-                   OFF /**< If selected no messages will be output */
-                  };
-
-	/**
-     * Retrieve a human readable representation of the given log level value.
-     */
-	inline char const * getLogLevelString( const LogLevel level );
-
-	/**
-     * A stream modifier that allows to colorize the log output.
-     */
-	template<typename Parent> struct Color
+	 * Specification of the message severity.
+	 *
+	 * In output each level automatically includes the higher levels.
+	 */
+	enum LogLevel
 	{
-		bool reset;
-		Color() : reset(true) {}
-		Color<Parent> operator~() const { Color<Parent> tmp(*this); tmp.reset = false; return tmp; }
-		char const *ansiCode() const { return Parent::ANSI(); }
-		bool resetColor() const { return reset; }
+		ALL,   /**< Log all message */
+		TRACE, /**< The lowes severity for messages describing the program flow */
+		DEBUG, /**< Debug messages */
+		INFO,  /**< Messages of informational nature, expected processing time e.g. */
+		WARN,  /**< Warning messages */
+		ERROR, /**< Non-fatal errors */
+		FATAL, /**< Messages that indicate terminal application failure */
+		OFF    /**< If selected no messages will be output */
 	};
-#define _COLOR(name, code) \
-	struct _##name { static char const * ANSI(); }; \
-	inline char const * _##name::ANSI() { return "\33[" code "m"; } \
-	typedef Color<_##name> name
+
+	/**
+	 * Retrieve a human readable representation of the given log level value.
+	 *
+	 * The overload can optimize better because it can determine the LogLevel at compile time.
+	 */
+	template <LogLevel> const char *getLogLevelString() noexcept;
+	/**
+	 * Overload of the above function for situations where the LogLevel \p level is only determined at run time.
+	 */
+	const char *getLogLevelString( LogLevel level );
+
+	/**
+	 * Compares the string \p level against the strings for LogLevel and returns the one it matches.
+	 *
+	 * \param level A string, which is a textual representation of one of the
+	 *              LogLevel enumerators.
+	 * \return The enumerator that matches the input string.
+	 * \throws std::invalid_argument if the string does not match any enumerator.
+	 */
+	LogLevel getLogLevel( const std::string &level );
+
+	template <LogLevel> const char *colorForLogLevel() noexcept;
+
+	/**
+	 * A stream modifier that allows to colorize the log output.
+	 */
+	template <typename Parent> class Color
+	{
+	public:
+		/// The default color modifier only affects the next object in the stream.
+		EINHARD_ALWAYS_INLINE_ Color() noexcept : reset( true )
+		{
+		}
+		/// With the ~ operator the color modifier affects the rest of the stream (or until
+		/// another color object is used).
+		EINHARD_ALWAYS_INLINE_ Color<Parent> operator~() const noexcept
+		{
+			return {false};
+		}
+		EINHARD_ALWAYS_INLINE_ char const *ansiCode() const noexcept
+		{
+			return Parent::ANSI();
+		}
+		EINHARD_ALWAYS_INLINE_ bool resetColor() const noexcept
+		{
+			return reset;
+		}
+
+	private:
+		EINHARD_ALWAYS_INLINE_ Color( bool r ) noexcept : reset( r )
+		{
+		}
+		bool reset;
+	};
+#define _COLOR( name, code )                                                                                           \
+	struct name##_t_                                                                                               \
+	{                                                                                                              \
+		static char const *ANSI() noexcept                                                                     \
+		{                                                                                                      \
+			return "\33[" code "m";                                                                        \
+		}                                                                                                      \
+	};                                                                                                             \
+	typedef Color<name##_t_> name
 
 	_COLOR(DGray,   "01;30");
 	_COLOR(Black,   "00;30");
@@ -130,136 +194,138 @@ namespace einhard
 	_COLOR(NoColor, "0"    );
 #undef _COLOR
 
-#define ANSI_COLOR_WARN  _Orange::ANSI()
-#define ANSI_COLOR_ERROR _DRed::ANSI()
-#define ANSI_COLOR_FATAL _DRed::ANSI()
-#define ANSI_COLOR_INFO  _DGreen::ANSI()
-#define ANSI_COLOR_DEBUG _DBlue::ANSI()
-#define ANSI_COLOR_CLEAR _NoColor::ANSI()
+	/**
+	 * A minimal class that implements the output stream operator to do nothing. This completely
+	 * eliminates the output stream statements from the resulting binary.
+	 */
+	struct DummyOutputFormatter
+	{
+		template <typename T> EINHARD_ALWAYS_INLINE_ DummyOutputFormatter &operator<<( const T & ) noexcept
+		{
+			return *this;
+		}
+		EINHARD_ALWAYS_INLINE_ DummyOutputFormatter &operator<<(
+		    std::ostream &( * )( std::ostream & ) ) noexcept
+		{
+			return *this;
+		}
+	};
 
+	class UnconditionalOutput
+	{
+	private:
+		// Pointer to the thread_local stringstream (if enabled)
+		std::ostringstream *out;
+#ifdef EINHARD_NO_THREAD_LOCAL
+		// without thread_local we simply use a local stringstream object
+		std::ostringstream realOut;
+#endif
+		// The number of chars required for aligning
+		unsigned char indent;
+		// Whether to colorize the output
+		const bool colorize;
+		// Whether the color needs to be reset with the next operator<<
+		bool resetColor = false;
+
+	public:
+		template <LogLevel VERBOSITY>
+		EINHARD_ALWAYS_INLINE_ UnconditionalOutput( bool colorize_, const char *areaName,
+							    std::integral_constant<LogLevel, VERBOSITY> )
+		    : colorize( colorize_ )
+		{
+			doInit<VERBOSITY>( areaName );
+		}
+
+		template <typename T> UnconditionalOutput &operator<<( const Color<T> &col )
+		{
+			if( colorize )
+			{
+				*out << col.ansiCode();
+				resetColor = col.resetColor();
+			}
+			return *this;
+		}
+
+		EINHARD_ALWAYS_INLINE_ UnconditionalOutput &operator<<( std::ostream &( *manip )( std::ostream & ) )
+		{
+			*out << manip;
+			return *this;
+		}
+
+		template <typename T> EINHARD_ALWAYS_INLINE_ UnconditionalOutput &operator<<( const T &msg )
+		{
+			*out << msg;
+			checkColorReset();
+			return *this;
+		}
+
+		void doCleanup() noexcept;
+
+	protected:
+		EINHARD_ALWAYS_INLINE_ UnconditionalOutput( bool colorize_ ) : colorize( colorize_ )
+		{
+		}
+		template <LogLevel VERBOSITY> void doInit( const char *areaName );
+		void checkColorReset();
+	};
 	/**
 	 * A wrapper for the output stream taking care proper formatting and colorization of the output.
 	 */
-	template<LogLevel VERBOSITY, bool THREADSAFE> class OutputFormatter
+	class OutputFormatter : public UnconditionalOutput
 	{
 		private:
-			// The output stream to print to
-			std::ostream * const out;
-			std::ostream * const real_out; // required for threadsafe
-			// Whether to colorize the output
-			bool const colorize;
-			mutable bool resetColor;
+			// Whether output is enabled
+			const bool enabled;
 
 		public:
-			OutputFormatter( std::ostream * const _out, bool const colorize )
-			 : out( THREADSAFE && _out ? new std::ostringstream() : _out ), real_out( _out ), colorize( colorize ),
-				resetColor(false)
+			OutputFormatter( const OutputFormatter & ) = delete;
+			OutputFormatter( OutputFormatter && ) = default;
+
+			template <LogLevel VERBOSITY>
+			EINHARD_ALWAYS_INLINE_ OutputFormatter( bool enabled_, bool const colorize_,
+								const char *areaName,
+								std::integral_constant<LogLevel, VERBOSITY> )
+			    : UnconditionalOutput( colorize_ ), enabled( enabled_ )
 			{
-				if( out != 0 )
+				if( enabled )
 				{
-					// Figure out current time
-					time_t rawtime;
-					tm * timeinfo;
-					time( &rawtime );
-					timeinfo = localtime( &rawtime );
-					
-					if( colorize )
-					{
-						// set color according to log level
-						switch ( VERBOSITY ) {
-							case WARN:
-								*out << ANSI_COLOR_WARN;
-								break;
-							case ERROR:
-								*out << ANSI_COLOR_ERROR;
-								break;
-							case FATAL:
-								*out << ANSI_COLOR_FATAL;
-								break;
-							case INFO:
-								*out << ANSI_COLOR_INFO;
-								break;
-							case DEBUG:
-								*out << ANSI_COLOR_DEBUG;
-								break;
-							default:
-								// in other cases we leave the default color
-								break;
-						}
-					}
-
-					// output it
-					*out << '[';
-					*out << std::setfill('0') << std::setw(2) << timeinfo->tm_hour;
-					*out << ':';
-					*out << std::setfill('0') << std::setw(2) << timeinfo->tm_min;
-					*out << ':';
-					*out << std::setfill('0') << std::setw(2) << timeinfo->tm_sec;
-					*out << ']';
-					// TODO would be good to have this at least .01 seconds
-					// for non-console output pure timestamp would probably be better
-
-					// output the log level of the message
-					*out << ' ' << getLogLevelString( VERBOSITY ) << ": ";
-
-					if( colorize ) {
-						// reset color according to log level
-						switch ( VERBOSITY ) {
-							case INFO:
-							case DEBUG:
-							case WARN:
-							case ERROR:
-							case FATAL:
-								*out << ANSI_COLOR_CLEAR;
-								break;
-							default:
-								// in other cases color is still default anyways
-								break;
-						}
-					}
+					doInit<VERBOSITY>( areaName );
 				}
 			}
 
-			template<typename T> inline const OutputFormatter<VERBOSITY, THREADSAFE>& operator<<( const Color<T> &col ) const
+			template <typename T> OutputFormatter &operator<<( const Color<T> &col )
 			{
-				if (out && colorize) {
-					*out << col.ansiCode();
-					resetColor = col.resetColor();
+				if( enabled )
+				{
+					UnconditionalOutput::operator<<(col);
 				}
 				return *this;
 			}
 
-			template<typename T> inline const OutputFormatter<VERBOSITY, THREADSAFE>& operator<<( const T &msg ) const
+			EINHARD_ALWAYS_INLINE_ OutputFormatter &operator<<( std::ostream &( *manip )( std::ostream & ) )
 			{
-				// output the log message
-				if( out != 0 ) {
-					*out << msg;
-					if (resetColor) {
-						*out << ANSI_COLOR_CLEAR;
-						resetColor = false;
-					}
+				if( enabled )
+				{
+					UnconditionalOutput::operator<<(manip);
 				}
-
 				return *this;
 			}
 
+			template <typename T> EINHARD_ALWAYS_INLINE_ OutputFormatter &operator<<( const T &msg )
+			{
+				if( enabled )
+				{
+					UnconditionalOutput::operator<<(msg);
+				}
+				return *this;
+			}
+
+			EINHARD_ALWAYS_INLINE_
 			~OutputFormatter( )
 			{
-				if( out != 0 )
+				if( enabled )
 				{
-					// make sure there is no strange formatting set anymore
-					*out << std::resetiosflags(  std::ios_base::floatfield  | std::ios_base::basefield
-											   | std::ios_base::adjustfield | std::ios_base::uppercase
-											   | std::ios_base::showpos     | std::ios_base::showpoint
-											   | std::ios_base::showbase    |  std::ios_base::boolalpha );
-
-					*out << std::endl; // TODO this would probably better be only '\n' as to not flush the buffers
-
-					if( THREADSAFE ) {
-						std::ostringstream * buf = static_cast<std::ostringstream*>(out);
-						*real_out << buf->str();
-						delete buf;
-					}
+					doCleanup();
 				}
 			}
 	};
@@ -273,9 +339,10 @@ namespace einhard
      *
      * The class can automatically detect non-tty output and will not colorize output in that case.
      */ 
-	template<LogLevel MAX = ALL, bool THREADSAFE = false> class Logger
+	template<LogLevel MAX = ALL> class Logger
 	{
 		private:
+			char areaName[32 - sizeof( LogLevel ) - sizeof( bool )] = {'\0'};
 			LogLevel verbosity;
 			bool colorize;
 
@@ -286,7 +353,8 @@ namespace einhard
 			 * The object will automatically colorize output on ttys and not colorize output
 			 * on non ttys.
 			 */
-			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity ) {
+			Logger( const LogLevel verbosity = WARN ) : verbosity( verbosity )
+			{
 				// use some, sadly not c++-ways to figure out whether we are writing ot a terminal
 				// only colorize when we are writing ot a terminal
 				colorize = isatty( fileno( stdout ) );
@@ -297,50 +365,175 @@ namespace einhard
 			 * Be aware that if output colorization is selected output will even be colorized if
 			 * output is to a non tty.
 			 */
-			Logger( const LogLevel verbosity, const bool colorize ) : verbosity( verbosity ), colorize( colorize ) { };
+			Logger( const LogLevel verbosity, const bool colorize )
+			    : verbosity( verbosity ), colorize( colorize ) {};
+
+			/**
+			 * Set an area name. This will be printed after the LogLevel to identify the
+			 * place in the code where the output is coming from. This can be used to
+			 * identify the different Logger objects in the log output.
+			 *
+			 * \param name A string. Only the first 30, or so, characters will be used. The rest
+			 *             will not be displayed. You can reset the name with an empty string.
+			 * \warning Passing a nullptr is not allowed!
+			 */
+			void setAreaName( const char *name )
+			{
+				assert( name );
+				std::strncpy( &areaName[0], name, sizeof( areaName ) - 1 );
+				areaName[sizeof( areaName ) - 1] = '\0';
+			}
+			EINHARD_ALWAYS_INLINE_
+			void setAreaName( const std::string &name )
+			{
+				setAreaName(name.c_str());
+			}
 
 			/** Access to the trace message stream. */
-			inline const OutputFormatter<TRACE, THREADSAFE> trace() const;
-			/** Access to the debug message stream. */
-			inline const OutputFormatter<DEBUG, THREADSAFE> debug() const;
-			/** Access to the info message stream. */
-			inline const OutputFormatter<INFO, THREADSAFE> info() const;
-			/** Access to the warning message stream. */
-			inline const OutputFormatter<WARN, THREADSAFE> warn() const;
-			/** Access to the error message stream. */
-			inline const OutputFormatter<ERROR, THREADSAFE> error() const;
-			/** Access to the fatal message stream. */
-			inline const OutputFormatter<FATAL, THREADSAFE> fatal() const;
+#ifdef NDEBUG
+			DummyOutputFormatter trace() const noexcept
+			{
+				return DummyOutputFormatter();
+			}
 
-			/** Check whether trace messages will be output */
-			inline bool beTrace() const;
-			/** Check whether debug messages will be output */
-			inline bool beDebug() const;
-			/** Check whether info messages will be output */
-			inline bool beInfo() const;
-			/** Check whether warn messages will be output */
-			inline bool beWarn() const;
-			/** Check whether error messages will be output */
-			inline bool beError() const;
-			/** Check whether fatal messages will be output */
-			inline bool beFatal() const;
+			template <typename... Ts> void trace( Ts &&... ) const noexcept
+			{
+			}
+#else
+			OutputFormatter trace() const
+			{
+				return {isEnabled<TRACE>(), colorize, areaName,
+					std::integral_constant<LogLevel, TRACE>()};
+			}
+
+			template <typename... Ts> void trace( Ts &&... args ) const noexcept
+			{
+				if( isEnabled<TRACE>() )
+				{
+					UnconditionalOutput o{colorize, areaName,
+							      std::integral_constant<LogLevel, TRACE>()};
+					auto &&unused = {&( o << args )...};
+					o.doCleanup();
+				}
+			}
+#endif
+			/** Access to the debug message stream. */
+#ifdef NDEBUG
+			DummyOutputFormatter debug() const noexcept
+			{
+				return DummyOutputFormatter();
+			}
+			template <typename... Ts> void debug( Ts &&... ) const noexcept
+			{
+			}
+#else
+			OutputFormatter debug() const
+			{
+				return {isEnabled<DEBUG>(), colorize, areaName,
+					std::integral_constant<LogLevel, DEBUG>()};
+			}
+			template <typename... Ts> void debug( Ts &&... args ) const noexcept
+			{
+				if( isEnabled<DEBUG>() )
+				{
+					UnconditionalOutput o{colorize, areaName,
+							  std::integral_constant<LogLevel, DEBUG>()};
+					auto &&unused = {&( o << args )...};
+					o.doCleanup();
+				}
+			}
+#endif
+			/** Access to the info message stream. */
+			OutputFormatter info() const
+			{
+				return {isEnabled<INFO>(), colorize, areaName,
+					std::integral_constant<LogLevel, INFO>()};
+			}
+			template <typename... Ts> void info( Ts &&... args ) const noexcept
+			{
+				if( isEnabled<INFO>() )
+				{
+					UnconditionalOutput o{colorize, areaName,
+							  std::integral_constant<LogLevel, INFO>()};
+					auto &&unused = {&( o << args )...};
+					o.doCleanup();
+				}
+			}
+			/** Access to the warning message stream. */
+			OutputFormatter warn() const
+			{
+				return {isEnabled<WARN>(), colorize, areaName,
+					std::integral_constant<LogLevel, WARN>()};
+			}
+			template <typename... Ts> void warn( Ts &&... args ) const noexcept
+			{
+				if( isEnabled<WARN>() )
+				{
+					UnconditionalOutput o{colorize, areaName,
+							  std::integral_constant<LogLevel, WARN>()};
+					auto &&unused = {&( o << args )...};
+					o.doCleanup();
+				}
+			}
+			/** Access to the error message stream. */
+			OutputFormatter error() const
+			{
+				return {isEnabled<ERROR>(), colorize, areaName,
+					std::integral_constant<LogLevel, ERROR>()};
+			}
+			template <typename... Ts> void error( Ts &&... args ) const noexcept
+			{
+				if( isEnabled<ERROR>() )
+				{
+					UnconditionalOutput o{colorize, areaName,
+							  std::integral_constant<LogLevel, ERROR>()};
+					auto &&unused = {&( o << args )...};
+					o.doCleanup();
+				}
+			}
+			/** Access to the fatal message stream. */
+			OutputFormatter fatal() const
+			{
+				return {isEnabled<FATAL>(), colorize, areaName,
+					std::integral_constant<LogLevel, FATAL>()};
+			}
+			template <typename... Ts> void fatal( Ts &&... args ) const noexcept
+			{
+				if( isEnabled<FATAL>() )
+				{
+					UnconditionalOutput o{colorize, areaName,
+							  std::integral_constant<LogLevel, FATAL>()};
+					auto &&unused = {&( o << args )...};
+					o.doCleanup();
+				}
+			}
+
+			template <LogLevel LEVEL> bool isEnabled() const noexcept
+			{
+#ifdef NDEBUG
+				if( LEVEL == DEBUG || LEVEL == TRACE ) {
+					return false;
+				}
+#endif
+				return ( MAX <= LEVEL && verbosity <= LEVEL );
+			}
 
 			/** Modify the verbosity of the Logger.
  			 *
 			 * Be aware that the verbosity can not be increased over the level given by the template
 			 * parameter
 			 */
-			inline void setVerbosity( LogLevel verbosity )
+			inline void setVerbosity( LogLevel verbosity ) noexcept
 			{
 				this->verbosity = verbosity;
 			}
 			/** Retrieve the current log level.
 			 *
 			 * If you want to check whether messages of a certain LogLevel will be output the
-			 * methos beTrace(), beDebug(), beInfo(), beWarn(), beError() and beFatal() should be
+			 * method isEnabled() should be
 			 * preffered.
 			 */
-			inline LogLevel getVerbosity( ) const
+			inline LogLevel getVerbosity() const noexcept
 			{
 				return this->verbosity;
 			}
@@ -349,156 +542,23 @@ namespace einhard
 			 */
 			inline char const * getVerbosityString( ) const
 			{
-				return getLogLevelString( this->verbosity );
+				return getLogLevelString(verbosity);
 			}
 			/**
 			 * Select whether the output stream should be colorized.
 			 */
-			inline void setColorize( bool colorize )
+			void setColorize( bool colorize ) noexcept
 			{
 				this->colorize = colorize;
 			}
 			/**
 			 * Check whether the output stream is colorized.
 			 */
-			inline void getColorize( ) const
+			void getColorize() const noexcept
 			{
 				return this->colorize;
 			}
 	};
-
-	/*
-	 * IMPLEMENTATIONS
-	 */
-
-	inline char const * getLogLevelString( const LogLevel level )
-	{
-		switch( level )
-		{
-			case ALL:
-				return "ALL";
-			case TRACE:
-				return "TRACE";
-			case DEBUG:
-				return "DEBUG";
-			case INFO:
-				return "INFO";
-			case WARN:
-				return "WARNING";
-			case ERROR:
-				return "ERROR";
-			case FATAL:
-				return "FATAL";
-			case OFF:
-				return "OFF";
-			default:
-				return "--- Something is horribly broken - A value outside the enumation has been given ---";
-		}
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<TRACE, THREADSAFE> Logger<MAX, THREADSAFE>::trace() const
-	{
-		if( beTrace() )
-			return OutputFormatter<TRACE, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<TRACE, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beTrace() const
-	{
-#ifdef NDEBUG
-		return false;
-#else
-		return ( MAX <= TRACE && verbosity <= TRACE );
-#endif
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<DEBUG, THREADSAFE> Logger<MAX, THREADSAFE>::debug() const
-	{
-		if( beDebug() )
-			return OutputFormatter<DEBUG, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<DEBUG, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beDebug() const
-	{
-#ifdef NDEBUG
-		return false;
-#else
-		return ( MAX <= DEBUG && verbosity <= DEBUG );
-#endif
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<INFO, THREADSAFE> Logger<MAX, THREADSAFE>::info() const
-	{
-		if( beInfo() )
-			return OutputFormatter<INFO, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<INFO, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beInfo() const
-	{
-		return ( MAX <= INFO && verbosity <= INFO );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<WARN, THREADSAFE> Logger<MAX, THREADSAFE>::warn() const
-	{
-		if( beWarn() )
-			return OutputFormatter<WARN, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<WARN, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beWarn() const
-	{
-		return ( MAX <= WARN && verbosity <= WARN );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<ERROR, THREADSAFE> Logger<MAX, THREADSAFE>::error() const
-	{
-		if( beError() )
-			return OutputFormatter<ERROR, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<ERROR, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beError() const
-	{
-		return ( MAX <= ERROR && verbosity <= ERROR );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> const OutputFormatter<FATAL, THREADSAFE> Logger<MAX, THREADSAFE>::fatal() const
-	{
-		if( beFatal() )
-			return OutputFormatter<FATAL, THREADSAFE>( &std::cout, colorize );
-		else
-			return OutputFormatter<FATAL, THREADSAFE>( 0, colorize );
-	}
-
-	template<LogLevel MAX, bool THREADSAFE> bool Logger<MAX, THREADSAFE>::beFatal() const
-	{
-		return ( MAX <= FATAL && verbosity <= FATAL );
-	}
-
 }
-
-#undef ANSI_COLOR_WARN
-#undef ANSI_COLOR_ERROR
-#undef ANSI_COLOR_FATAL
-#undef ANSI_COLOR_INFO
-#undef ANSI_COLOR_DEBUG
-#undef ANSI_COLOR_CLEAR
-
-#define EINHARD_STREAM(arg) \
-template<einhard::LogLevel VERBOSITY, bool THREADSAFE> \
-inline const einhard::OutputFormatter<VERBOSITY, THREADSAFE>& operator<<(const einhard::OutputFormatter<VERBOSITY, THREADSAFE> &out, arg)
-#define EINHARD_STREAM_T1(T1, arg) \
-template<einhard::LogLevel VERBOSITY, bool THREADSAFE, T1> \
-inline const einhard::OutputFormatter<VERBOSITY, THREADSAFE>& operator<<(const einhard::OutputFormatter<VERBOSITY, THREADSAFE> &out, arg)
-#define EINHARD_STREAM_T2(T1, T2, arg1, arg2) \
-template<einhard::LogLevel VERBOSITY, bool THREADSAFE, T1, T2> \
-inline const einhard::OutputFormatter<VERBOSITY, THREADSAFE>& operator<<(const einhard::OutputFormatter<VERBOSITY, THREADSAFE> &out, arg1, arg2)
 
 // vim: ts=4 sw=4 tw=100 noet
