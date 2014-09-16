@@ -1,9 +1,0 @@
-Features Missing:
- * Configuration
- * File output
- * Tests
- * Examples
- * API Documentation
- * Code Documentation
- * Output to multiple streams (e.g. stderr + logfile, stdout for anything below err + stderr for err and fatal + file for all)
-
