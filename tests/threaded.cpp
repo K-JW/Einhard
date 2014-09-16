@@ -48,6 +48,8 @@ int main( int, char** )
 	t2.join();
 	t3.join();
 	t4.join();
+
+    return 0;
 }
 
 void callable::operator()()
