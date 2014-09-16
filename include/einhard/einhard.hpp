@@ -531,7 +531,7 @@ namespace einhard
 			 *
 			 * If you want to check whether messages of a certain LogLevel will be output the
 			 * method isEnabled() should be
-			 * preffered.
+			 * preferred.
 			 */
 			inline LogLevel getVerbosity() const noexcept
 			{
