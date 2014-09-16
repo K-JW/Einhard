@@ -19,7 +19,8 @@
  * along with Einhard.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <boost/thread.hpp>
+#include <thread>
+
 #include "einhard.hpp"
 
 struct callable
@@ -34,12 +35,14 @@ struct callable
 
 int main( int, char** )
 {
+    using std::thread;
+
 	einhard::Logger<einhard::INFO> logger(einhard::INFO);
 
-	boost::thread t1(callable(1,logger));
-	boost::thread t2(callable(2,logger));
-	boost::thread t3(callable(3,logger));
-	boost::thread t4(callable(4,logger));
+	thread t1(callable(1,logger));
+	thread t2(callable(2,logger));
+	thread t3(callable(3,logger));
+	thread t4(callable(4,logger));
 
 	t1.join();
 	t2.join();
