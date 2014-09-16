@@ -150,7 +150,7 @@ namespace einhard
 		{
 			return {false};
 		}
-		EINHARD_ALWAYS_INLINE_ char const *ansiCode() const noexcept
+		EINHARD_ALWAYS_INLINE_ const char *ansiCode() const noexcept
 		{
 			return Parent::ANSI();
 		}
@@ -168,7 +168,7 @@ namespace einhard
 #define _COLOR( name, code )                                                                                           \
 	struct name##_t_                                                                                               \
 	{                                                                                                              \
-		static char const *ANSI() noexcept                                                                     \
+		static const char *ANSI() noexcept                                                                     \
 		{                                                                                                      \
 			return "\33[" code "m";                                                                        \
 		}                                                                                                      \
