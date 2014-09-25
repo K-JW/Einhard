@@ -1,6 +1,6 @@
 2014-XX-XX - Version 0.4
  * Support for multi-line log messages
- * Use “'” as time separator instead of “:”. This is an incompatible change!
+ * You can now choose the time separator to use. The default remains “:”.
  * Re-introduced the library for faster compilation of code using Einhard.
  * Support logging from multiple threads
  * Clang support
