@@ -58,6 +58,8 @@
  * utilities to adjust the configuration.
  */
 
+#pragma once
+
 #include <assert.h>
 #include <iostream>
 #include <iomanip>
@@ -229,11 +231,11 @@ namespace einhard
 
 	public:
 		template <LogLevel VERBOSITY>
-		EINHARD_ALWAYS_INLINE_ UnconditionalOutput( bool colorize_, const char *areaName,
+		EINHARD_ALWAYS_INLINE_ UnconditionalOutput( const bool colorize_, const char *areaName, const char timeSeparator,
 							    std::integral_constant<LogLevel, VERBOSITY> )
 		    : colorize( colorize_ )
 		{
-			doInit<VERBOSITY>( areaName );
+			doInit<VERBOSITY>( areaName, timeSeparator );
 		}
 
 		template <typename T> UnconditionalOutput &operator<<( const Color<T> &col )
@@ -262,10 +264,10 @@ namespace einhard
 		void doCleanup() noexcept;
 
 	protected:
-		EINHARD_ALWAYS_INLINE_ UnconditionalOutput( bool colorize_ ) : colorize( colorize_ )
+		EINHARD_ALWAYS_INLINE_ UnconditionalOutput( const bool colorize_ ) : colorize( colorize_ )
 		{
 		}
-		template <LogLevel VERBOSITY> void doInit( const char *areaName );
+		template <LogLevel VERBOSITY> void doInit( const char *areaName, const char timeSeparator );
 		void checkColorReset();
 	};
 	/**
@@ -283,13 +285,13 @@ namespace einhard
 
 			template <LogLevel VERBOSITY>
 			EINHARD_ALWAYS_INLINE_ OutputFormatter( bool enabled_, bool const colorize_,
-								const char *areaName,
+								const char *areaName, const char timeSeparator,
 								std::integral_constant<LogLevel, VERBOSITY> )
 			    : UnconditionalOutput( colorize_ ), enabled( enabled_ )
 			{
 				if( enabled )
 				{
-					doInit<VERBOSITY>( areaName );
+					doInit<VERBOSITY>( areaName, timeSeparator );
 				}
 			}
 
@@ -345,6 +347,7 @@ namespace einhard
 			char areaName[32 - sizeof( LogLevel ) - sizeof( bool )] = {'\0'};
 			LogLevel verbosity;
 			bool colorize;
+			char timeSeparator = ':';
 
 		public:
 			/**
@@ -389,6 +392,16 @@ namespace einhard
 				setAreaName(name.c_str());
 			}
 
+			/**
+			 * Set the character used to separate hours, minutes and seconds.
+			 *
+			 * \param separator A character to separate the components of the time.
+			 */
+			void setTimeSeparator(const char separator)
+			{
+				timeSeparator = separator;
+			}
+
 			/** Access to the trace message stream. */
 #ifdef NDEBUG
 			DummyOutputFormatter trace() const noexcept
@@ -402,7 +415,7 @@ namespace einhard
 #else
 			OutputFormatter trace() const
 			{
-				return {isEnabled<TRACE>(), colorize, areaName,
+				return {isEnabled<TRACE>(), colorize, areaName, timeSeparator,
 					std::integral_constant<LogLevel, TRACE>()};
 			}
 
@@ -410,7 +423,7 @@ namespace einhard
 			{
 				if( isEnabled<TRACE>() )
 				{
-					UnconditionalOutput o{colorize, areaName,
+					UnconditionalOutput o{colorize, areaName, timeSeparator,
 							      std::integral_constant<LogLevel, TRACE>()};
 					auto &&unused = {&( o << args )...};
 					o.doCleanup();
@@ -429,14 +442,14 @@ namespace einhard
 #else
 			OutputFormatter debug() const
 			{
-				return {isEnabled<DEBUG>(), colorize, areaName,
+				return {isEnabled<DEBUG>(), colorize, areaName, timeSeparator,
 					std::integral_constant<LogLevel, DEBUG>()};
 			}
 			template <typename... Ts> void debug( Ts &&... args ) const noexcept
 			{
 				if( isEnabled<DEBUG>() )
 				{
-					UnconditionalOutput o{colorize, areaName,
+					UnconditionalOutput o{colorize, areaName, timeSeparator,
 							  std::integral_constant<LogLevel, DEBUG>()};
 					auto &&unused = {&( o << args )...};
 					o.doCleanup();
@@ -446,14 +459,14 @@ namespace einhard
 			/** Access to the info message stream. */
 			OutputFormatter info() const
 			{
-				return {isEnabled<INFO>(), colorize, areaName,
+				return {isEnabled<INFO>(), colorize, areaName, timeSeparator,
 					std::integral_constant<LogLevel, INFO>()};
 			}
 			template <typename... Ts> void info( Ts &&... args ) const noexcept
 			{
 				if( isEnabled<INFO>() )
 				{
-					UnconditionalOutput o{colorize, areaName,
+					UnconditionalOutput o{colorize, areaName, timeSeparator,
 							  std::integral_constant<LogLevel, INFO>()};
 					auto &&unused = {&( o << args )...};
 					o.doCleanup();
@@ -462,14 +475,14 @@ namespace einhard
 			/** Access to the warning message stream. */
 			OutputFormatter warn() const
 			{
-				return {isEnabled<WARN>(), colorize, areaName,
+				return {isEnabled<WARN>(), colorize, areaName, timeSeparator,
 					std::integral_constant<LogLevel, WARN>()};
 			}
 			template <typename... Ts> void warn( Ts &&... args ) const noexcept
 			{
 				if( isEnabled<WARN>() )
 				{
-					UnconditionalOutput o{colorize, areaName,
+					UnconditionalOutput o{colorize, areaName, timeSeparator,
 							  std::integral_constant<LogLevel, WARN>()};
 					auto &&unused = {&( o << args )...};
 					o.doCleanup();
@@ -478,14 +491,14 @@ namespace einhard
 			/** Access to the error message stream. */
 			OutputFormatter error() const
 			{
-				return {isEnabled<ERROR>(), colorize, areaName,
+				return {isEnabled<ERROR>(), colorize, areaName, timeSeparator,
 					std::integral_constant<LogLevel, ERROR>()};
 			}
 			template <typename... Ts> void error( Ts &&... args ) const noexcept
 			{
 				if( isEnabled<ERROR>() )
 				{
-					UnconditionalOutput o{colorize, areaName,
+					UnconditionalOutput o{colorize, areaName, timeSeparator,
 							  std::integral_constant<LogLevel, ERROR>()};
 					auto &&unused = {&( o << args )...};
 					o.doCleanup();
@@ -494,14 +507,14 @@ namespace einhard
 			/** Access to the fatal message stream. */
 			OutputFormatter fatal() const
 			{
-				return {isEnabled<FATAL>(), colorize, areaName,
+				return {isEnabled<FATAL>(), colorize, areaName, timeSeparator,
 					std::integral_constant<LogLevel, FATAL>()};
 			}
 			template <typename... Ts> void fatal( Ts &&... args ) const noexcept
 			{
 				if( isEnabled<FATAL>() )
 				{
-					UnconditionalOutput o{colorize, areaName,
+					UnconditionalOutput o{colorize, areaName, timeSeparator,
 							  std::integral_constant<LogLevel, FATAL>()};
 					auto &&unused = {&( o << args )...};
 					o.doCleanup();

@@ -20,6 +20,7 @@
  */
 
 #include "einhard.hpp"
+#include "commonsource.h"
 
 #include <cstring>
 #include <stdio.h>
@@ -104,6 +105,8 @@ int main( int, char** )
 	baseLogger.info() << "Default float " << 1.0f;
 	baseLogger.info() << "Testing\nMultiline\nOutput without color\n";
 
+	baseLogger.setTimeSeparator('\'');
+	baseLogger.info() << "The time seperator has been set to \"'\".";
 
 #ifdef NDEBUG
 	if( baseLogger.isEnabled<TRACE>() )

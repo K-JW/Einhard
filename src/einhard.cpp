@@ -138,7 +138,7 @@ LogLevel getLogLevel( const std::string &level) {
 	}
 }
 
-template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *areaName )
+template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *areaName, const char time_separator )
 {
 #ifdef EINHARD_NO_THREAD_LOCAL
 	out = &realOut;
@@ -162,9 +162,9 @@ template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *area
 	out->fill( '0' );
 	*out << '[';
 	*out << std::setw( 2 ) << timeinfo->tm_hour;
-	*out << '\'';
+	*out << time_separator;
 	*out << std::setw( 2 ) << timeinfo->tm_min;
-	*out << '\'';
+	*out << time_separator;
 	*out << std::setw( 2 ) << timeinfo->tm_sec;
 	*out << ']';
 	out->fill( oldFill );
@@ -190,12 +190,12 @@ template <LogLevel VERBOSITY> void UnconditionalOutput::doInit( const char *area
 	}
 }
 
-template void UnconditionalOutput::doInit<TRACE>( const char * );
-template void UnconditionalOutput::doInit<DEBUG>( const char * );
-template void UnconditionalOutput::doInit<INFO>( const char * );
-template void UnconditionalOutput::doInit<WARN>( const char * );
-template void UnconditionalOutput::doInit<ERROR>( const char * );
-template void UnconditionalOutput::doInit<FATAL>( const char * );
+template void UnconditionalOutput::doInit<TRACE>( const char *, const char );
+template void UnconditionalOutput::doInit<DEBUG>( const char *, const char );
+template void UnconditionalOutput::doInit<INFO>( const char *, const char );
+template void UnconditionalOutput::doInit<WARN>( const char *, const char );
+template void UnconditionalOutput::doInit<ERROR>( const char *, const char );
+template void UnconditionalOutput::doInit<FATAL>( const char *, const char );
 
 void UnconditionalOutput::checkColorReset()
 {
