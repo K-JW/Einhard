@@ -32,6 +32,11 @@ add_library(einhard src/einhard.cpp)
 
 # Install the header files
 install(DIRECTORY include/einhard DESTINATION include)
+set(LIBRARY_INSTALL_PATH "lib" CACHE STRING "The path to install libraries to, will be places below CMAKE_INSTALL_PREFIX")
+install(TARGETS einhard
+	LIBRARY DESTINATION ${LIBRARY_INSTALL_PATH}
+	ARCHIVE DESTINATION ${LIBRARY_INSTALL_PATH}
+)
 
 # Take care of Test
 include (CTest)
