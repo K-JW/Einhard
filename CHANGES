@@ -1,4 +1,4 @@
-2014-XX-XX - Version 0.4
+2014-10-27 - Version 0.4
  * Support for multi-line log messages
  * You can now choose the time separator to use. The default remains “:”.
  * Re-introduced the library for faster compilation of code using Einhard.
