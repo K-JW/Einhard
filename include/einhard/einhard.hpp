@@ -567,7 +567,9 @@ namespace einhard
 			/**
 			 * Check whether the output stream is colorized.
 			 */
-			void getColorize() const noexcept
+            // ChangeLogs:
+            //		2020-06-23 14:28 +0800 : fix errors found by GCC 6 or 7
+            bool getColorize() const noexcept
 			{
 				return this->colorize;
 			}
